@@ -1,2 +1,4 @@
 lex.yy.c
 scan
+.build/
+ft_lex
