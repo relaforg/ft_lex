@@ -1,1 +1,2 @@
-lex.yy.*
+lex.yy.c
+scan
