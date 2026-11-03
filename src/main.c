@@ -1,9 +1,69 @@
-int main(int argc, char **argv) {
-	argc--; argv++;
-	
-	if (argc <= 0) {
-		return (-1); //  TODO: READ STDIN
-	}
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#define READ_SIZE 1024
+
+char	*read_fd(FILE *file)
+{
+	size_t	capacity;
+	char	*buf;
+	size_t	read_size;
+	char	tmp[READ_SIZE];
+
+	capacity = READ_SIZE;
+	buf = malloc(1);
+	if (!buf)
+		return (NULL);
+	*buf = 0;
+	while (1)
+	{
+		read_size = fread(tmp, sizeof(*tmp), READ_SIZE, file);
+		if (!read_size)
+			break ;
+		capacity += READ_SIZE;
+		buf = realloc(buf, capacity);
+		if (!buf)
+			return (NULL);
+		buf = strncat(buf, tmp, read_size);
+	}
+	return (buf);
+}
+
+int	main(int argc, char **argv)
+{
+	FILE	*file;
+	char	*buf;
+
+	argc--;
+	argv++;
+	if (argc <= 0)
+	{
+		file = stdin;
+		if (!file)
+		{
+			dprintf(2, "Error: cannot open stdin");
+			return (-1);
+		}
+	}
+	else
+	{
+		file = fopen(argv[0], "r");
+		if (!file)
+		{
+			dprintf(2, "Error: cannot open %s", argv[0]);
+			return (-1);
+		}
+	}
+	buf = read_fd(file);
+	if (!buf)
+	{
+		dprintf(2, "Error: cannot read\n");
+		return (-1);
+	}
+	printf("%s", buf);
+	fclose(file);
+	free(buf);
 	return (0);
 }
