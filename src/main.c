@@ -1,3 +1,4 @@
+#include "parse.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,10 +14,9 @@ char	*read_fd(FILE *file)
 	char	tmp[READ_SIZE];
 
 	capacity = READ_SIZE;
-	buf = malloc(1);
+	buf = calloc(1, sizeof(*buf));
 	if (!buf)
 		return (NULL);
-	*buf = 0;
 	while (1)
 	{
 		read_size = fread(tmp, sizeof(*tmp), READ_SIZE, file);
@@ -43,7 +43,7 @@ int	main(int argc, char **argv)
 		file = stdin;
 		if (!file)
 		{
-			dprintf(2, "Error: cannot open stdin");
+			dprintf(2, "Error: cannot open stdin\n");
 			return (-1);
 		}
 	}
@@ -52,7 +52,7 @@ int	main(int argc, char **argv)
 		file = fopen(argv[0], "r");
 		if (!file)
 		{
-			dprintf(2, "Error: cannot open %s", argv[0]);
+			dprintf(2, "Error: cannot open %s\n", argv[0]);
 			return (-1);
 		}
 	}
@@ -62,7 +62,10 @@ int	main(int argc, char **argv)
 		dprintf(2, "Error: cannot read\n");
 		return (-1);
 	}
-	printf("%s", buf);
+	if (parse(buf) < 0)
+	{
+		dprintf(2, "Error: parsing error\n");
+	}
 	fclose(file);
 	free(buf);
 	return (0);
