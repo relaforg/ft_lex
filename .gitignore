@@ -2,3 +2,5 @@ lex.yy.c
 scan
 .build/
 ft_lex
+ft_lex_debug
+*.out

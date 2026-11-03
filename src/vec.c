@@ -1,5 +1,4 @@
 #include "vec.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -51,20 +50,7 @@ void	vec_free(t_vec *vec, void (*free_elem)(void *))
 		}
 	}
 	free(vec->data);
-}
-
-int	main(void)
-{
-	t_vec	vec;
-
-	vec_init(&vec, sizeof(int));
-	for (int i = 0; i < 1000; i++)
-	{
-		vec_push(&vec, &i);
-	}
-	for (int i = 0; i < 1000; i++)
-	{
-		printf("%d\n", *((int *)vec_get(&vec, i)));
-	}
-	vec_free(&vec, NULL);
+	vec->cap = 0;
+	vec->len = 0;
+	vec->data = NULL;
 }
