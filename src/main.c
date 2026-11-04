@@ -69,7 +69,6 @@ int	main(int argc, char **argv)
 		dprintf(2, "Error: parsing error\n");
 		return (-1);
 	}
-	printf("%s\n", lf.user_code);
 	fclose(file);
 	free(buf);
 	file = fopen("lex.yy.c", "w");

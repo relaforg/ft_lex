@@ -22,6 +22,64 @@ typedef struct
 	t_lex_file	*out;
 }				t_parser;
 
+t_parse_error	extract_ere(char *line, size_t *end)
+{
+	char	in_quotes;
+	char	in_brackets;
+
+	in_quotes = 0;
+	in_brackets = 0;
+	*end = 0;
+	while (line[*end])
+	{
+		if (line[*end] == '\\' && line[*end + 1])
+			(*end)++;
+		else if (in_quotes)
+			in_quotes = (line[*end] != '"');
+		else if (in_brackets)
+			in_brackets = (line[*end] != ']');
+		else if (line[*end] == '"')
+			in_quotes = 1;
+		else if (line[*end] == '[')
+		{
+			in_brackets = 1;
+			if (line[*end + 1] && line[*end + 1] == '^' && line[*end + 2]
+				&& line[*end + 2] == ']')
+				*end += 2;
+			else if (line[*end + 1] == ']')
+				(*end)++;
+		}
+		else if (line[*end] == ' ' || line[*end] == '\t')
+			break ;
+		(*end)++;
+	}
+	if (in_quotes || in_brackets)
+		return (PARSE_ERR_UNCLOSED_BLOCK);
+	return (PARSE_OK);
+}
+
+t_parse_error	extract_action(char *line, )
+{
+	return (PARSE_OK);
+}
+
+t_parse_error	parse_rule(char *line, t_lex_file *lf)
+{
+	size_t			ere_end;
+	t_parse_error	err;
+	size_t			action_start;
+
+	(void)lf;
+	err = extract_ere(line, &ere_end);
+	if (err != PARSE_OK)
+		return (err);
+	action_start = ere_end;
+	while (line[action_start] && (line[action_start] == ' '
+			|| line[action_start] == '\t'))
+		action_start++;
+	return (PARSE_OK);
+}
+
 t_parse_error	parse_line(char *line, t_state *state, t_lex_file *lf)
 {
 	switch (*state)
@@ -31,6 +89,7 @@ t_parse_error	parse_line(char *line, t_state *state, t_lex_file *lf)
 			*state = ST_DECL_BLOCK;
 		break ;
 	case ST_RULES:
+		parse_rule(line, lf);
 		break ;
 	case ST_USER_CODE:
 		break ;

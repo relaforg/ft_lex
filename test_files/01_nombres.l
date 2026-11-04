@@ -11,7 +11,11 @@
 
 %%
 [0-9]+		printf("NOMBRE(%s)\n", yytext);
-\n		;
+\n		{
+			if (yyleng > 3) {
+				printf("grand\n");
+			}
+		}
 .		;
 %%
 
