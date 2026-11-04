@@ -68,5 +68,8 @@ int	main(int argc, char **argv)
 	}
 	fclose(file);
 	free(buf);
+	file = fopen("lex.yy.c", "w");
+	fwrite("Hello\n", 1, 6, file);
+	fclose(file);
 	return (0);
 }

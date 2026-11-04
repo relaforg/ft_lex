@@ -3,11 +3,12 @@
 #include "parse.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum
 {
+	ST_DECL_BLOCK = 0,
 	ST_DEFINITIONS,
-	ST_DECL_BLOCK,
 	ST_RULES,
 	ST_USER_CODE
 }				t_state;
@@ -25,7 +26,9 @@ t_parse_error	parse(char *buf)
 	char		*line;
 	t_cursor	cursor;
 	int			err;
+	t_state		state;
 
+	state = ST_DEFINITIONS;
 	init_cursor(&cursor, buf);
 	while (1)
 	{
@@ -34,8 +37,15 @@ t_parse_error	parse(char *buf)
 			return (PARSE_ERR_ALLOC);
 		if (!line)
 			break ;
-		printf("%s\n", line);
+		if (!strncmp(line, "%%", 2))
+		{
+			state++;
+			free(line);
+			continue ;
+		}
 		free(line);
 	}
+	if (state <= ST_DEFINITIONS)
+		return (PARSE_ERR_NO_SEPARATOR);
 	return (PARSE_OK);
 }
