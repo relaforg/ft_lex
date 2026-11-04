@@ -56,7 +56,7 @@ t_parse_error	parse(char *buf, t_lex_file *lf)
 	state = ST_DEFINITIONS;
 	init_cursor(&cursor, buf);
 	lex_file_init(lf);
-	while (1)
+	while (state != ST_USER_CODE)
 	{
 		err = get_next_cursor_line(&cursor, &line);
 		if (err == -1)
@@ -69,6 +69,7 @@ t_parse_error	parse(char *buf, t_lex_file *lf)
 			parse_line(line, &state, lf);
 		free(line);
 	}
+	lf->user_code = cursor.buf + cursor.pos;
 	if (state == ST_DEFINITIONS)
 		return (PARSE_ERR_NO_SEPARATOR);
 	return (PARSE_OK);
