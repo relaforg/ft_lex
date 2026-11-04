@@ -10,6 +10,8 @@ DEBUG_DIR := .debug
 VPATH := src
 SRCS := main.c \
 		vec.c \
+		strbuf.c \
+		lex_file.c \
 		parser/parser.c \
 		parser/cursor.c
 

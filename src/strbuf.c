@@ -40,16 +40,3 @@ void	strbuf_free(t_strbuf *sb)
 	free(sb->data);
 	sb->data = NULL;
 }
-
-int	main(void)
-{
-	t_strbuf	sb;
-
-	strbuf_init(&sb);
-	strbuf_append(&sb, "HelloWorld!", 11);
-	printf("%s : %zu\n", sb.data, sb.len);
-	strbuf_append(&sb, "HelloWorld!", 11);
-	printf("%s : %zu\n", sb.data, sb.len);
-	strbuf_free(&sb);
-	return (0);
-}

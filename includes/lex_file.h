@@ -18,4 +18,7 @@ typedef struct {
 	char		*user_code;
 }	t_lex_file;
 
+void	lex_file_init(t_lex_file *lf);
+void	lex_file_free(t_lex_file *lf);
+
 #endif

@@ -1,6 +1,7 @@
 #include "cursor.h"
 #include "lex_file.h"
 #include "parse.h"
+#include "strbuf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,31 @@ typedef struct
 	t_lex_file	*out;
 }				t_parser;
 
-t_parse_error	parse(char *buf)
+t_parse_error	parse_line(char *line, t_state *state, t_lex_file *lf)
+{
+	switch (*state)
+	{
+	case ST_DEFINITIONS:
+		if (!strncmp(line, "%{", 2))
+			*state = ST_DECL_BLOCK;
+		break ;
+	case ST_RULES:
+		break ;
+	case ST_USER_CODE:
+		break ;
+	case ST_DECL_BLOCK:
+		if (!strncmp(line, "%}", 2))
+		{
+			*state = ST_DEFINITIONS;
+			break ;
+		}
+		strbuf_append(&lf->decl_code, line, strlen(line));
+		break ;
+	}
+	return (PARSE_OK);
+}
+
+t_parse_error	parse(char *buf, t_lex_file *lf)
 {
 	char		*line;
 	t_cursor	cursor;
@@ -30,6 +55,7 @@ t_parse_error	parse(char *buf)
 
 	state = ST_DEFINITIONS;
 	init_cursor(&cursor, buf);
+	lex_file_init(lf);
 	while (1)
 	{
 		err = get_next_cursor_line(&cursor, &line);
@@ -38,14 +64,12 @@ t_parse_error	parse(char *buf)
 		if (!line)
 			break ;
 		if (!strncmp(line, "%%", 2))
-		{
 			state++;
-			free(line);
-			continue ;
-		}
+		else
+			parse_line(line, &state, lf);
 		free(line);
 	}
-	if (state <= ST_DEFINITIONS)
+	if (state == ST_DEFINITIONS)
 		return (PARSE_ERR_NO_SEPARATOR);
 	return (PARSE_OK);
 }

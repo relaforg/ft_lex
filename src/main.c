@@ -1,3 +1,4 @@
+#include "lex_file.h"
 #include "parse.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -33,8 +34,9 @@ char	*read_fd(FILE *file)
 
 int	main(int argc, char **argv)
 {
-	FILE	*file;
-	char	*buf;
+	FILE		*file;
+	char		*buf;
+	t_lex_file	lf;
 
 	argc--;
 	argv++;
@@ -62,14 +64,16 @@ int	main(int argc, char **argv)
 		dprintf(2, "Error: cannot read\n");
 		return (-1);
 	}
-	if (parse(buf) < 0)
+	if (parse(buf, &lf) < 0)
 	{
 		dprintf(2, "Error: parsing error\n");
+		return (-1);
 	}
+	printf("%s\n", lf.decl_code.data);
 	fclose(file);
 	free(buf);
 	file = fopen("lex.yy.c", "w");
-	fwrite("Hello\n", 1, 6, file);
 	fclose(file);
+	lex_file_free(&lf);
 	return (0);
 }
