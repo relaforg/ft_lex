@@ -1,0 +1,10 @@
+default_echo	posix	texte non reconnu recopie (ECHO par defaut)
+empty_input	posix	entree vide
+newline_rule	posix	regle sur \n
+dotstar	posix	.* s'arrete au \n
+never_match	posix	regle jamais reconnue (warning) mais compile
+high_bytes	flex	octets > 127
+nul_input	flex	octet NUL dans l'entree
+crlf_input	posix	\r dans l'entree
+no_final_nl	posix	entree sans \n final
+many_rules	posix	300 regles

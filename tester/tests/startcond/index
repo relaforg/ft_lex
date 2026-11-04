@@ -1,0 +1,9 @@
+incl	posix	%s : les regles sans <SC> restent actives
+excl	posix	%x : les regles sans <SC> sont inactives
+begin0	posix	BEGIN 0 equivaut a BEGIN INITIAL
+sc_list	posix	<A,B>
+initial_only	posix	<INITIAL> inactive dans une %s
+excl_default_echo	posix	%x sans regle : ECHO par defaut
+comments	posix	commentaires avec %x
+bol_sc	posix	^ dans une start condition
+many_sc	posix	10 start conditions

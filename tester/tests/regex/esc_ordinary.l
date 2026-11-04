@@ -1,0 +1,2 @@
+%%
+\q	printf("<%s>", yytext);

@@ -1,6 +1,9 @@
 lex.yy.c
 scan
 .build/
+.debug/
 ft_lex
 ft_lex_debug
 *.out
+tester/.work/*
+libl.a

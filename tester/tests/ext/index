@@ -1,0 +1,17 @@
+option_noyywrap	ext	%option noyywrap
+option_yylineno	ext	%option yylineno
+option_unknown	ext	%option inconnue -> erreur
+eof_rule	ext	<<EOF>>
+eof_sc	ext	<SC><<EOF>>
+sc_star	ext	<*>
+sc_scope	ext	<SC>{ ... } (portee)
+top_block	ext	%top{ }
+yy_start	ext	YY_START
+yyterminate	ext	yyterminate()
+case_insensitive	ext	(?i:...)
+class_diff	ext	classe {-} (difference)
+class_union	ext	classe {+} (union)
+yy_scan_string	ext	yy_scan_string
+stack	ext	%option stack + yy_push_state
+user_action	ext	YY_USER_ACTION
+pct_brace_action	ext	action %{ ... %}

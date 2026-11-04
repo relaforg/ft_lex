@@ -1,0 +1,2 @@
+%%
+(^abc)|(def$)	printf("x");

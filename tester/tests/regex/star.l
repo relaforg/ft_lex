@@ -1,0 +1,2 @@
+%%
+xa*	printf("<%s>", yytext);

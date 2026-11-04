@@ -1,0 +1,7 @@
+z04.l:1: incomplete name definition
+z04.l:3: bad start condition list
+z04.l:4: undeclared start condition Q
+z04.l:4: negative range in character class
+z04.l:5: missing quote
+z04.l:6: unrecognized rule
+z04.l:6: fatal parse error

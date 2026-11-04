@@ -1,0 +1,2 @@
+%%
+[[:digit:]]+	printf("<%s>", yytext);

@@ -1,0 +1,2 @@
+%%
+[[:cntrl:]]+	printf("<%s>", yytext);

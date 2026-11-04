@@ -13,22 +13,21 @@ char	get_cursor_char(t_cursor *cursor)
 	return (cursor->buf[cursor->pos]);
 }
 
-char	*get_next_cursor_line(t_cursor *cursor)
+int	get_next_cursor_line(t_cursor *cursor, char **buf)
 {
 	size_t	i;
-	char	*line;
 
-	i = 0;
-	if (get_cursor_char(cursor) == '\n')
-		i++;
 	if (!get_cursor_char(cursor))
-		return (NULL);
+		return (0);
+	i = 0;
 	while (cursor->buf[cursor->pos + i] != '\n' && cursor->buf[cursor->pos + i])
 		i++;
-	line = strndup(&cursor->buf[cursor->pos], i);
-	if (!line)
-		return (NULL);
+	*buf = strndup(&cursor->buf[cursor->pos], i);
+	if (!*buf)
+		return (-1);
 	cursor->pos += i;
 	cursor->line++;
-	return (line);
+	if (get_cursor_char(cursor) == '\n')
+		cursor->pos++;
+	return (0);
 }

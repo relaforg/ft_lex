@@ -1,0 +1,2 @@
+%%
+[-a]+	printf("<%s>", yytext);

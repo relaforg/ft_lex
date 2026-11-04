@@ -1,0 +1,3 @@
+c_lexer	posix	lexer C (mots-cles, operateurs, commentaires)
+repeat	posix	repetitions bornees
+words	posix	400 mots-cles

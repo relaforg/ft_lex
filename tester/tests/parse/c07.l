@@ -1,0 +1,3 @@
+%%
+  /* commentaire */
+ab printf("X");

@@ -1,0 +1,24 @@
+equiv_class	undefined	[[=a=]] (hors sujet, ne doit pas planter)
+collating	undefined	[[.a.]] (hors sujet, ne doit pas planter)
+bad_posix_class	undefined	[[:foo:]] classe inconnue
+unclosed_posix_class	undefined	[[:alpha:] non ferme
+deep_parens	undefined	2000 parentheses imbriquees
+deep_parens_unclosed	undefined	1000 parentheses non fermees
+deep_braces	undefined	action avec 3000 accolades imbriquees
+long_def_chain	undefined	chaine de 300 definitions
+mutual_defs	undefined	definitions mutuellement recursives
+huge_rep	undefined	a{100000}
+huge_rep_value	undefined	a{99999999999999999999}
+neg_rep	undefined	a{-1}
+big_class	undefined	classe de 256 octets
+binary_garbage	undefined	fichier binaire aleatoire
+only_percent	undefined	fichier contenant '%'
+only_nul	undefined	fichier de NUL
+huge_pattern	undefined	pattern litteral de 50000 caracteres
+many_sc_decl	undefined	2000 start conditions
+long_name	undefined	nom de definition de 10000 caracteres
+unterminated_everything	undefined	tout ouvert a EOF
+empty_brackets	undefined	[] vide
+neg_empty_brackets	undefined	[^] vide
+trailing_backslash	undefined	pattern finissant par \
+anchors_in_group	undefined	(^abc)|(def$) (POSIX: indefini)

@@ -1,0 +1,2 @@
+%%
+[[:upper:]]+	printf("<%s>", yytext);

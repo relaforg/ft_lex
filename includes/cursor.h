@@ -12,6 +12,6 @@ typedef struct
 
 void	init_cursor(t_cursor *cursor, char *buf);
 char	get_cursor_char(t_cursor *cursor);
-char	*get_next_cursor_line(t_cursor *cursor);
+int		get_next_cursor_line(t_cursor *cursor, char **buf);
 
 #endif

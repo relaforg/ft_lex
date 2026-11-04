@@ -1,0 +1,163 @@
+sep01	posix	%% seul en colonne 0
+sep02	posix	' %%' indente en section 1 = code, donc pas de separateur -> erreur
+sep03	posix	tab + %% en section 1 = code -> erreur
+sep04	flex	%% suivi d'espaces
+sep05	flex	%% suivi de texte : texte ignore
+sep06	flex	%%texte colle : texte ignore
+sep07	flex	%%% vaut separateur
+sep08	posix	aucun %% -> erreur
+sep09	posix	fichier vide -> erreur
+sep10	posix	%% seul : seule la regle par defaut (ECHO)
+sep11	flex	second %% suivi de texte
+sep12	posix	%% en section 3 copie tel quel
+sep13	undefined	' %%' indente apres une regle (section 2)
+sep14	flex	fichier CRLF
+sep15	flex	second %% sans newline final
+sep16	flex	%% seul sans newline final
+sep17	flex	second %% suivi d'espaces
+sep19	undefined	ligne %% dans un bloc %{ %} (POSIX: interdit)
+sep20	posix	seulement des lignes vides -> erreur
+sep21	flex	%%<tab>texte
+d01	posix	bloc %{ %} copie
+d02	posix	' %{' indente = simple ligne de code
+d03	flex	texte apres %{ ignore
+d04	flex	texte apres %} ignore
+d05	posix	' %}' indente ne ferme pas
+d06	posix	%{ non ferme -> erreur
+d07	posix	%} en milieu de ligne ne ferme pas
+d08	posix	%} seul sans %{ -> erreur
+d09	posix	%{ dans un bloc copie comme texte
+d10	flex	%} suivi d'espaces
+d11	posix	plusieurs blocs concatenes
+d12	posix	accolades et "%}" dans le bloc
+d14	posix	%{ %} en section 2 avant la 1re regle -> debut de yylex
+d15	undefined	%{ %} en section 2 apres une regle
+d16	flex	%{ suivi d'espaces
+c01	flex	commentaire /* */ en colonne 0 (section 1)
+c02	flex	commentaire multi-ligne en colonne 0
+c03	flex	texte apres */ sur la meme ligne -> erreur
+c05	flex	commentaire non ferme -> erreur
+c06	posix	lignes indentees copiees (section 1)
+c07	posix	commentaire indente avant la 1re regle
+c09	posix	ligne de blancs en section 1
+y01	flex	%% dans un commentaire de section 1
+r01	posix	code indente avant la 1re regle -> debut de yylex
+r02	undefined	code indente apres une regle
+r03	posix	ligne vide/blancs avant la 1re regle
+r04	flex	ligne de blancs entre deux regles
+r05	posix	lignes vides entre regles
+n01	posix	definition simple
+n02	posix	separateur tabulation
+n03	posix	plusieurs blancs
+n04	flex	blancs en fin de valeur ignores
+n05	posix	nom sans valeur -> erreur
+n07	undefined	nom avec '-' (pas un identifiant C)
+n08	undefined	nom commencant par un chiffre
+n09	posix	nom commencant par _
+n11	flex	nom defini deux fois -> erreur
+n12	posix	nom non defini -> erreur
+n13	posix	definition utilisant une autre definition
+n14	flex	reference en avant
+n15	flex	expansion parenthesee : {AB}+
+n16	flex	valeur avec espace non protege -> erreur a l'usage
+n17	posix	valeur avec espace entre guillemets
+n20	posix	noms sensibles a la casse -> erreur
+n21	undefined	definition auto-referente
+n22	posix	valeur invalide -> erreur a l'usage
+n23	flex	valeur invalide jamais utilisee : pas d'erreur
+n24	undefined	definition commencant par ^
+n26	posix	{D}{2} : repetition d'une definition
+n29	flex	expansion parenthesee : x{D} avec D=a|b
+n30	undefined	contexte de queue / dans une definition
+n31	posix	{D} non developpe dans [...]
+n32	posix	{D} non developpe dans "..."
+n33	flex	{ D } avec espaces -> erreur
+n34	posix	definition apres %s
+n36	posix	valeur commencant par \"
+n38	flex	nom colle a la valeur : D[0-9]
+z16	posix	ligne 'ab printf' en section 1 = definition de nom
+s01	posix	%s inclusive + regle masquee (warning)
+s02	posix	%x avec plusieurs noms (espaces/tabs)
+s03	posix	%start %Start %S : mots commencant par s/S
+s05	flex	%s sans nom -> erreur
+s06	undefined	start condition declaree deux fois
+s09	undefined	%s INITIAL (deja predeclaree)
+s08	undefined	<Z> non declaree
+s10	undefined	nom de start condition commencant par un chiffre
+s12	flex	%s A,B -> erreur
+s13	posix	' %s A' indente = code
+s15	flex	<A, B> avec espace -> erreur
+s16	flex	<> vide -> erreur
+s18	flex	<A> suivi d'un blanc -> erreur
+s19	posix	<INITIAL> utilisable
+s21	flex	%sA colle -> erreur
+s23	posix	%xfoo : mot commencant par x
+s24	posix	%sbar : mot commencant par s
+z09	undefined	^<SC>pattern
+z10	posix	<SC>^pattern
+o03	posix	%array
+o04	posix	%pointer
+o05	posix	tailles de tables %p %n %a %e %k %o
+o05b	posix	tailles de tables avec tabulation
+o06	flex	%foo inconnu -> erreur
+o07	undefined	%p sans nombre
+o08	flex	%array suivi de texte
+o09	flex	% seul -> erreur
+o11	posix	' %array' indente = code
+o13	flex	%s en section 2 = regle de pattern %s
+o14	undefined	%array et %pointer ensemble
+a01	undefined	regle sans action
+a03	posix	action ; vide
+a04	posix	action |
+a05	undefined	| sur la derniere regle
+a06	posix	chaine de |
+a07	flex	| suivi de texte
+a08	flex	ab| sans blanc -> erreur
+a09	posix	action { } multi-ligne
+a10	posix	accolades imbriquees
+a11	posix	} dans une chaine
+a12	posix	} dans un caractere
+a13	posix	} dans un commentaire
+a14	undefined	} dans un commentaire //
+a15	posix	accolade non fermee -> erreur
+a16	posix	action sans accolade = une seule ligne
+a17	flex	texte apres la } fermante garde
+a18	posix	\" dans une chaine
+a19	posix	\\ dans une chaine
+a20	posix	" desequilibre dans un commentaire
+a21	posix	tabulation entre pattern et action
+a22	undefined	action } seule
+a25	flex	commentaire multi-ligne en fin d'action
+a26	undefined	newline dans une chaine d'action
+z14	posix	apostrophe dans une chaine
+z15	posix	guillemet dans un caractere
+z01	undefined	ligne %% dans une action { }
+z02	flex	action sur la ligne suivante -> erreur
+z05	undefined	| puis fin de section
+z06	posix	action {} puis %%
+z17	posix	action non fermee -> erreur
+p01	posix	espace dans "..."
+p02	posix	espace dans [...]
+p03	posix	espace echappe
+p04	posix	espace dans ( ) -> erreur
+p05	posix	espace dans {1, 2} -> erreur
+p06	posix	guillemet non ferme -> erreur
+p07	posix	[ non ferme -> erreur
+p08	posix	( non fermee -> erreur
+p09	posix	) en trop -> erreur
+p14	flex	commentaire en colonne 0 en section 2 -> erreur
+p15	undefined	commentaire indente apres une regle
+p26	flex	() vide -> erreur
+p28	posix	a{2,1} -> erreur
+p30	undefined	* en tete de pattern
+p31	flex	[z-a] intervalle inverse -> erreur
+p36	flex	pattern suivi d'EOF sans newline -> erreur
+z18	flex	$ seul -> erreur
+z19	flex	^ seul -> erreur
+z04	posix	plusieurs erreurs -> erreur
+u01	posix	section 3 copiee mot pour mot
+u02	posix	section 3 vide
+x02	posix	ligne faite d'une tabulation en section 1
+x03	flex	definitions en CRLF
+x04	posix	action sur une tres longue ligne
+x01	undefined	octet NUL dans le .l

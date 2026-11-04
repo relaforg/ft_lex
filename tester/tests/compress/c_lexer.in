@@ -1,0 +1,2 @@
+int main(void) { /* c */ return x->y + 0x1F * "s\"t" ; }
+while (i <<= 2) unsigned_var++;

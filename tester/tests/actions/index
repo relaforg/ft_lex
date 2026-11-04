@@ -1,0 +1,37 @@
+yytext_yyleng	posix	yytext et yyleng
+echo	posix	ECHO
+yymore	posix	yymore (exemple mega-kludge)
+yymore_yyleng	posix	yymore cumule yyleng
+yyless	posix	yyless(3)
+yyless_yyleng	posix	yyless ajuste yytext et yyleng
+yyless0_begin	posix	yyless(0) + BEGIN
+yymore_yyless	posix	yymore puis yyless
+input	posix	input() pour sauter un commentaire
+input_eof	posix	input() renvoie 0 en fin d'entree
+input_newline	posix	input() lit les \n
+unput	posix	unput() reinjecte un caractere
+unput_string	posix	unput() d'une chaine (ordre inverse)
+unput_yytext	posix	unput de yytext (copie avant)
+unput_many	posix	unput() de 5000 caracteres
+reject	posix	REJECT : comptage he/she qui se chevauchent
+reject_prefix	posix	REJECT essaie les correspondances plus courtes
+reject_next_rule	posix	REJECT passe a la regle suivante
+begin_action	posix	BEGIN dans une action
+return_tokens	posix	yylex renvoie des tokens
+yywrap_custom	posix	yywrap utilisateur appele en fin d'entree
+yywrap_continue	posix	yywrap renvoie 0 et change yyin
+yyin_set	posix	yyin modifie avant yylex
+yyout_set	flex	yyout redirige ECHO
+array_type	posix	%array : yytext est un tableau
+pointer_type	posix	%pointer : yytext est un pointeur
+array_yymore	posix	%array + yymore
+array_yyless	posix	%array + yyless
+array_unput	posix	%array + unput
+yyleng_int	posix	yyleng est un int
+yylex_decl	posix	prototype yylex compatible
+namespace	posix	noms utilisateur courants sans conflit
+stdio_user	posix	fonctions stdio dans les actions
+long_token	posix	token de 100000 caracteres
+big_input	posix	entree de 1 Mo (remplissage du buffer)
+token_across_buffer	posix	tokens a cheval sur deux buffers
+rescan_loop	posix	plusieurs appels a yylex apres return

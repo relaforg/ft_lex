@@ -1,0 +1,96 @@
+lit	posix	litteral
+dot	posix	. ne reconnait pas \n
+star	posix	a*
+plus	posix	a+
+opt	posix	ab?c
+alt	posix	ab|cd
+group	posix	(ab)+
+group_nested	posix	((a|b)c)+
+group_alt	posix	a(b|c)d
+prec_star	posix	ab* : * lie b seul
+prec_alt	posix	ab|cd : concat avant |
+prec_rep	posix	ab{2} : {} lie b seul
+prec_rep_group	posix	(ab){2}
+prec_plus_q	posix	a+? equivaut (a+)?
+prec_alt3	posix	a|b|c+
+rep_n	posix	a{3}
+rep_nm	posix	a{2,3}
+rep_n_	posix	a{2,}
+rep_0_1	posix	xa{0,1}b
+rep_0	undefined	xa{0}b : POSIX l autorise, flex le refuse
+rep_class	posix	[0-9]{2,4}
+rep_big	posix	a{1,200}
+rep_nested	posix	(a{2}){2}
+cls	posix	[abc]+
+cls_neg	posix	[^abc]+ (inclut \n)
+cls_range	posix	[a-cx-z]+
+cls_dash_first	posix	[-a]+
+cls_dash_last	posix	[a-]+
+cls_rbracket	posix	[]a]+
+cls_neg_rbracket	posix	[^]a]+
+cls_esc_bracket	flex	[\]]+ echappe dans une classe
+cls_esc_n	posix	[\n] et [\t]
+cls_specials	posix	operateurs litteraux dans [...]
+cls_caret_mid	posix	[a^]+
+cls_dot	posix	[.]
+cls_backslash	posix	[\\]+
+cls_quote	posix	["a]+
+cls_alpha	posix	[[:alpha:]]+
+cls_digit	posix	[[:digit:]]+
+cls_alnum	posix	[[:alnum:]]+
+cls_upper	posix	[[:upper:]]+
+cls_lower	posix	[[:lower:]]+
+cls_space	posix	[[:space:]]+
+cls_blank	posix	[[:blank:]]+
+cls_punct	posix	[[:punct:]]+
+cls_print	posix	[[:print:]]+
+cls_graph	posix	[[:graph:]]+
+cls_cntrl	posix	[[:cntrl:]]+
+cls_xdigit	posix	[[:xdigit:]]+
+cls_mixed	posix	[[:digit:]a-f]+
+cls_neg_posix	posix	[^[:alpha:]]+
+cls_two_posix	posix	[[:upper:][:digit:]]+
+esc_n	posix	\n
+esc_t	posix	\t
+esc_misc	posix	\f \v \r
+esc_backslash	posix	\\
+esc_ops	posix	\. \* \+ \? \| \( \)
+esc_quote	posix	\"
+esc_slash	posix	\/
+esc_brace	posix	\{ \}
+esc_octal	posix	\101 (octal)
+esc_octal_short	posix	\60 (octal 2 chiffres)
+esc_hex	posix	\x41 (hexa)
+esc_ordinary	flex	\q -> q
+esc_nul	undefined	\0 (NUL)
+str_ops	posix	"a.b*" litteral
+str_esc	posix	"a\nb" echappement dans une chaine
+str_concat	posix	"a"b"c"
+str_quote	posix	"\""
+str_rep	posix	"ab"+ : + porte sur toute la chaine
+str_empty	posix	a""b
+str_class	posix	"[a]" litteral
+bol	posix	^ab
+eol	posix	ab$
+eol_eof	flex	ab$ en fin de fichier sans \n
+bol_eol	posix	^ab$
+bol_after_rule	posix	^ apres une ligne consommee par une regle
+caret_mid	flex	a^b litteral
+dollar_mid	flex	a$b litteral
+trail	posix	ab/cd
+trail_var	posix	a+/b
+trail_class	posix	[0-9]+/"."
+trail_alt	posix	(a|ab)/c
+trail_nl	posix	a/\n
+trail_overlap	undefined	ab*/bc (POSIX: indefini)
+trail_bol	posix	^a/b
+longest	posix	plus longue correspondance
+tie_first	posix	egalite -> premiere regle
+tie_first2	posix	egalite -> premiere regle (inverse, warning)
+backtrack	posix	retour arriere apres echec d'une longue regle
+longest_trail	posix	longueur avec contexte de queue (contexte compte)
+keywords	posix	mots-cles contre identifiants
+example_subject	posix	exemple du sujet
+c_comment	posix	commentaires C avec une seule regex
+c_string	posix	chaine C avec echappements
+float	posix	nombres flottants

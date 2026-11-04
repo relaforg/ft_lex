@@ -1,0 +1,2 @@
+%%
+[[:graph:]]+	printf("<%s>", yytext);
