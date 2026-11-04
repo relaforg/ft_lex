@@ -30,7 +30,7 @@ cli_case() {
 	local why; why=$(crash_reason "$LEX_RC" ft_lex)
 	if [ -n "$why" ]; then res_ko "$name" "$desc" "$why" "$(head_file "$w/lex.stderr")"; return; fi
 	case $r in
-		0) res_ok ;;
+		0) res_ok "$name" "$desc" ;;
 		2) res_warn "$name" "$desc" "$CLI_WHY" "$CLI_DETAIL" ;;
 		*) res_ko "$name" "$desc" "$CLI_WHY" "$CLI_DETAIL" ;;
 	esac

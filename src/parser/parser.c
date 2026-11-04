@@ -36,7 +36,6 @@ t_parse_error	parse(char *buf)
 			break ;
 		printf("%s\n", line);
 		free(line);
-		line = 0;
 	}
 	return (PARSE_OK);
 }

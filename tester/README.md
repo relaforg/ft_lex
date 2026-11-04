@@ -21,7 +21,9 @@ make fuzzdiff     # entrées aléatoires : ton scanner contre celui de lex
 
 Si tes binaires sont ailleurs : `make FT_LEX=../build/ft_lex LIBL=../libl/libl.a`.
 
-Chaque test affiche `N.OK`, `N.KO` ou `N.WARN`. Les détails (fichier `.l`, entrée, diff attendu/obtenu) sont écrits dans `logs/<catégorie>.log`.
+Chaque test affiche une ligne `OK`/`KO`/`WARN` avec son nom et ce qu'il vérifie. Sous chaque `KO`/`WARN` : le fichier `.l` concerné, la raison, et un extrait du détail (diff attendu/obtenu, stderr…). Le détail complet est dans `logs/<catégorie>.log`.
+
+`VERBOSE=0` remet l'ancienne grille compacte (`1.OK 2.KO …`), `DETAIL_LINES=N` change la taille des extraits (12 par défaut).
 
 ## Ce qui est vérifié
 

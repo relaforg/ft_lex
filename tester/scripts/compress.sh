@@ -5,7 +5,8 @@
 run_compress() {
 	begin_cat compress
 	if [ -z "$COMPRESS_FLAG" ]; then
-		printf '%sCOMPRESS_FLAG non defini (ex. make compress COMPRESS_FLAG=-C)%s' "$YELLOW" "$RESET"
+		printf '  %sCOMPRESS_FLAG non defini (ex. make compress COMPRESS_FLAG=-C)%s' "$YELLOW" "$RESET"
+		[ "$VERBOSE" = 1 ] && printf '\n'
 		end_cat; return
 	fi
 	require_libl
@@ -33,8 +34,7 @@ run_compress() {
 				"$(diff <(cat -A "$exp/$name.in.expected") <(cat -A "$w/scan.stdout") | head -10)"
 			continue
 		fi
-		res_ok
-		printf '%s(%s -> %s)%s ' "$BLUE" "$s1" "$s2" "$RESET"
+		res_ok "$name" "$desc" "$s1 -> $s2 octets"
 	done 3< "$ROOT/tests/compress/index"
 	end_cat
 }

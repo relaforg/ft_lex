@@ -35,6 +35,7 @@ for cat in "$@"; do
 done
 
 rm -rf "$WORK"/t.*
-printf '\n%sTOTAL%s : %s%d OK%s, %s%d KO%s, %s%d WARN%s\n' "$BOLD" "$RESET" \
+[ "$VERBOSE" = 1 ] || printf '\n'
+printf '%sTOTAL%s : %s%d OK%s, %s%d KO%s, %s%d WARN%s\n' "$BOLD" "$RESET" \
 	"$GREEN" "$TOTAL_OK" "$RESET" "$RED" "$TOTAL_KO" "$RESET" "$YELLOW" "$TOTAL_WARN" "$RESET"
 [ $TOTAL_KO -eq 0 ]

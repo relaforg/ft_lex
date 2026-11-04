@@ -7,6 +7,7 @@ libl_build() { # DIR LFILE INPUT EXPECTED
 	printf '%s' "$input" > "$dir/in.txt"
 	run_lex "$dir" "$l"
 	[ "$LEX_RC" -eq 0 ] || { L_WHY="ft_lex echoue (exit $LEX_RC)"; L_DETAIL=$(head_file "$dir/lex.stderr" 500); return 1; }
+	[ -f "$dir/lex.yy.c" ] || { L_WHY="ft_lex renvoie 0 mais ne genere pas lex.yy.c (impossible de tester la libl)"; return 1; }
 	(cd "$dir" && $CC -w -o scan lex.yy.c "$LIBL" > cc.log 2>&1) ||
 		{ L_WHY="l'edition de liens avec la libl echoue"; L_DETAIL=$(head -10 "$dir/cc.log"); return 1; }
 	run_scan "$dir" "$dir/in.txt"
@@ -55,7 +56,7 @@ run_libl() {
 		[ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && continue
 		w=$(newwork); L_WHY=""; L_DETAIL=""; LEX_RC=0
 		if [ "$name" != exists ] && [ ! -f "$LIBL" ]; then res_ko "$name" "$desc" "libl introuvable"; continue; fi
-		if "l_$name" "$w"; then res_ok; else res_ko "$name" "$desc" "$L_WHY" "$L_DETAIL"; fi
+		if "l_$name" "$w"; then res_ok "$name" "$desc"; else res_ko "$name" "$desc" "$L_WHY" "$L_DETAIL"; fi
 	done
 	end_cat
 }

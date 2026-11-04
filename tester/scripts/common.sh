@@ -38,6 +38,11 @@ VG_LEX=(valgrind -q --error-exitcode=99 --leak-check=full
 VG_RUN=(valgrind -q --error-exitcode=99 --leak-check=full --errors-for-leak-kinds=definite)
 
 # ---------------------------------------------------------------- rapport
+# VERBOSE=1 (defaut) : une ligne par test (nom + description), raison affichee sous les KO/WARN
+# VERBOSE=0          : ancienne grille compacte "1.OK 2.KO ...", details dans logs/ seulement
+# DETAIL_LINES=N     : nb max de lignes de detail (diff, stderr...) affichees par echec
+VERBOSE=${VERBOSE:-1}
+DETAIL_LINES=${DETAIL_LINES:-12}
 CAT=""; CAT_IDX=0; CAT_OK=0; CAT_KO=0; CAT_WARN=0; CAT_COL=0
 TOTAL_OK=0; TOTAL_KO=0; TOTAL_WARN=0
 
@@ -45,26 +50,58 @@ begin_cat() {
 	CAT=$1; CAT_IDX=0; CAT_OK=0; CAT_KO=0; CAT_WARN=0; CAT_COL=0
 	LOG=$LOGDIR/$CAT.log
 	: > "$LOG"
-	printf '%s%-10s%s: ' "$BOLD$BLUE" "$CAT" "$RESET"
+	if [ "$VERBOSE" = 1 ]; then
+		printf '%s== %s ==%s\n' "$BOLD$BLUE" "$CAT" "$RESET"
+	else
+		printf '%s%-10s%s: ' "$BOLD$BLUE" "$CAT" "$RESET"
+	fi
 }
 
-_tick() {
+# _line COLOR STATUS NAME DESC : une ligne (verbeux) ou une case de la grille (compact)
+_line() {
 	CAT_IDX=$((CAT_IDX + 1))
+	if [ "$VERBOSE" = 1 ]; then
+		printf '  %s%-4s%s %3d  %-24s %s\n' "$1" "$2" "$RESET" "$CAT_IDX" "$3" "$4"
+		return
+	fi
 	if [ $CAT_COL -ge 12 ]; then printf '\n%12s' ''; CAT_COL=0; fi
 	CAT_COL=$((CAT_COL + 1))
+	printf '%s%d.%s%s ' "$1" "$CAT_IDX" "$2" "$RESET"
 }
 
-# res_ok
-res_ok() { _tick; CAT_OK=$((CAT_OK + 1)); printf '%s%d.OK%s ' "$GREEN" "$CAT_IDX" "$RESET"; }
+# _show NAME REASON [DETAIL] : en mode verbeux, explique l'echec sous la ligne du test
+_show() {
+	[ "$VERBOSE" = 1 ] || return 0
+	local pad='             '
+	[ -f "$ROOT/tests/$CAT/$1.l" ] && printf '%sfichier : tests/%s/%s.l\n' "$pad" "$CAT" "$1"
+	printf '%sraison  : %s%s%s\n' "$pad" "$BOLD" "$2" "$RESET"
+	[ -n "$3" ] || return 0
+	local n; n=$(printf '%s\n' "$3" | wc -l)
+	printf '%s\n' "$3" | head -n "$DETAIL_LINES" | sed "s/^/$pad| /"
+	if [ "$n" -gt "$DETAIL_LINES" ]; then
+		printf '%s| ... %d lignes de plus dans logs/%s.log\n' "$pad" $((n - DETAIL_LINES)) "$CAT"
+	fi
+}
+
+# res_ok NAME DESC [NOTE]
+res_ok() {
+	CAT_OK=$((CAT_OK + 1))
+	_line "$GREEN" OK "$1" "$2${3:+ $BLUE($3)$RESET}"
+	if [ "$VERBOSE" != 1 ] && [ -n "$3" ]; then printf '%s(%s)%s ' "$BLUE" "$3" "$RESET"; fi
+}
 
 # res_ko NAME DESC REASON [DETAIL]
 res_ko() {
-	_tick; CAT_KO=$((CAT_KO + 1)); printf '%s%d.KO%s ' "$RED" "$CAT_IDX" "$RESET"
+	CAT_KO=$((CAT_KO + 1))
+	_line "$RED" KO "$1" "$2"
+	_show "$1" "$3" "$4"
 	_log KO "$@"
 }
 # res_warn NAME DESC REASON [DETAIL]
 res_warn() {
-	_tick; CAT_WARN=$((CAT_WARN + 1)); printf '%s%d.WARN%s ' "$YELLOW" "$CAT_IDX" "$RESET"
+	CAT_WARN=$((CAT_WARN + 1))
+	_line "$YELLOW" WARN "$1" "$2"
+	_show "$1" "$3" "$4"
 	_log WARN "$@"
 }
 _log() {
@@ -78,11 +115,13 @@ _log() {
 }
 
 end_cat() {
-	printf '\n%12s%s%d OK%s' '' "$GREEN" "$CAT_OK" "$RESET"
+	if [ "$VERBOSE" = 1 ]; then printf '  %s=>%s ' "$BOLD" "$RESET"; else printf '\n%12s' ''; fi
+	printf '%s%d OK%s' "$GREEN" "$CAT_OK" "$RESET"
 	[ $CAT_KO -gt 0 ] && printf ', %s%d KO%s' "$RED" "$CAT_KO" "$RESET"
 	[ $CAT_WARN -gt 0 ] && printf ', %s%d WARN%s' "$YELLOW" "$CAT_WARN" "$RESET"
-	[ $((CAT_KO + CAT_WARN)) -gt 0 ] && printf '  -> details : logs/%s.log' "$CAT"
+	[ $((CAT_KO + CAT_WARN)) -gt 0 ] && printf '  -> details complets : logs/%s.log' "$CAT"
 	printf '\n'
+	[ "$VERBOSE" = 1 ] && printf '\n'
 	TOTAL_OK=$((TOTAL_OK + CAT_OK)); TOTAL_KO=$((TOTAL_KO + CAT_KO)); TOTAL_WARN=$((TOTAL_WARN + CAT_WARN))
 }
 

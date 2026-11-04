@@ -26,7 +26,7 @@ case_one() {
 		return
 	fi
 	if [ "$tag" = undefined ]; then
-		res_ok
+		res_ok "$name" "$desc"
 		return
 	fi
 
@@ -44,7 +44,7 @@ case_one() {
 			res_warn "$name" "$desc" "erreur bien detectee, mais le message ne contient pas '$name.l:<ligne>'" \
 				"$(head_file "$w/lex.stderr" 400)"
 		else
-			res_ok
+			res_ok "$name" "$desc"
 		fi
 		return
 	fi
@@ -60,7 +60,7 @@ case_one() {
 	fi
 
 	local inputs=("$src/$name".in*)
-	[ -e "${inputs[0]}" ] || { res_ok; return; }
+	[ -e "${inputs[0]}" ] || { res_ok "$name" "$desc"; return; }
 
 	if ! (cd "$w" && $CC -w -o scan lex.yy.c "$LIBL" > cc.log 2>&1); then
 		fail_for "$tag" "$name" "$desc" "lex.yy.c ne compile pas (cc -w lex.yy.c libl)" "$(head -15 "$w/cc.log")"
@@ -87,7 +87,7 @@ case_one() {
 			return
 		fi
 	done
-	res_ok
+	res_ok "$name" "$desc"
 }
 
 run_cases() {

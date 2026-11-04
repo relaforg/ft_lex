@@ -12,10 +12,11 @@
 #   make one T=cat/nom   un seul test
 #
 # Variables : FT_LEX=../ft_lex  LIBL=../libl.a  CC=cc  COMPRESS_FLAG=
+#             VERBOSE=0 (grille compacte)  DETAIL_LINES=12 (lignes de detail par echec)
 
 FT_LEX ?= ../ft_lex
 LIBL ?= ../libl.a
-export FT_LEX LIBL CC COMPRESS_FLAG FUZZ_N FUZZ_SEED REF_LEX
+export FT_LEX LIBL CC COMPRESS_FLAG FUZZ_N FUZZ_SEED REF_LEX VERBOSE DETAIL_LINES
 
 MANDATORY := parse regex startcond matching actions robust cli libl symbols
 CATS := $(MANDATORY) ext compress

@@ -18,7 +18,10 @@ int	get_next_cursor_line(t_cursor *cursor, char **buf)
 	size_t	i;
 
 	if (!get_cursor_char(cursor))
+	{
+		*buf = 0;
 		return (0);
+	}
 	i = 0;
 	while (cursor->buf[cursor->pos + i] != '\n' && cursor->buf[cursor->pos + i])
 		i++;

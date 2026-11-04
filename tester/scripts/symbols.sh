@@ -39,7 +39,7 @@ run_symbols() {
 		if [ -n "$bad" ]; then
 			res_ko "$name" "lex.yy.c de $t" "lex.yy.c appelle des fonctions interdites" "$bad"
 		else
-			res_ok
+			res_ok "$name" "lex.yy.c de $t"
 		fi
 	done
 	end_cat
