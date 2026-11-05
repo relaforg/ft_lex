@@ -64,7 +64,7 @@ int	main(int argc, char **argv)
 		dprintf(2, "Error: cannot read\n");
 		return (-1);
 	}
-	if (parse(buf, &lf) < 0)
+	if (parse(buf, &lf))
 	{
 		dprintf(2, "Error: parsing error\n");
 		return (-1);

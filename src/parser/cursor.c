@@ -34,3 +34,30 @@ int	get_next_cursor_line(t_cursor *cursor, char **buf)
 		cursor->pos++;
 	return (0);
 }
+
+void	cursor_advance(t_cursor *cursor)
+{
+	if (!get_cursor_char(cursor))
+		return ;
+	if (get_cursor_char(cursor) == '\n')
+		cursor->line++;
+	cursor->pos++;
+}
+
+void	cursor_skip_blanks(t_cursor *cursor)
+{
+	while ((get_cursor_char(cursor) == ' ' || get_cursor_char(cursor) == '\t'))
+		cursor_advance(cursor);
+}
+
+void	cursor_skip_line(t_cursor *cursor)
+{
+	while (get_cursor_char(cursor) && get_cursor_char(cursor) != '\n')
+		cursor_advance(cursor);
+	cursor_advance(cursor);
+}
+
+int	cursor_starts_with(t_cursor *cursor, const char *s)
+{
+	return (strncmp(cursor->buf + cursor->pos, s, strlen(s)) == 0);
+}

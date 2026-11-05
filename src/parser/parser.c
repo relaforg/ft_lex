@@ -8,8 +8,7 @@
 
 typedef enum
 {
-	ST_DECL_BLOCK = 0,
-	ST_DEFINITIONS,
+	ST_DEFINITIONS = 0,
 	ST_RULES,
 	ST_USER_CODE
 }				t_state;
@@ -22,84 +21,89 @@ typedef struct
 	t_lex_file	*out;
 }				t_parser;
 
-t_parse_error	extract_ere(char *line, size_t *end)
+t_parse_error	extract_ere(t_cursor *cursor, char **pattern)
 {
 	char	in_quotes;
 	char	in_brackets;
+	size_t	start;
 
 	in_quotes = 0;
 	in_brackets = 0;
-	*end = 0;
-	while (line[*end])
+	start = cursor->pos;
+	while (get_cursor_char(cursor) && get_cursor_char(cursor) != '\n')
 	{
-		if (line[*end] == '\\' && line[*end + 1])
-			(*end)++;
+		if (get_cursor_char(cursor) == '\\' && cursor->buf[cursor->pos + 1]
+			&& cursor->buf[cursor->pos + 1] != '\n')
+			cursor_advance(cursor);
 		else if (in_quotes)
-			in_quotes = (line[*end] != '"');
+			in_quotes = (get_cursor_char(cursor) != '"');
 		else if (in_brackets)
-			in_brackets = (line[*end] != ']');
-		else if (line[*end] == '"')
+			in_brackets = (get_cursor_char(cursor) != ']');
+		else if (get_cursor_char(cursor) == '"')
 			in_quotes = 1;
-		else if (line[*end] == '[')
+		else if (get_cursor_char(cursor) == '[')
 		{
 			in_brackets = 1;
-			if (line[*end + 1] && line[*end + 1] == '^' && line[*end + 2]
-				&& line[*end + 2] == ']')
-				*end += 2;
-			else if (line[*end + 1] == ']')
-				(*end)++;
+			if (cursor->buf[cursor->pos + 1] && cursor->buf[cursor->pos
+				+ 1] == '^' && cursor->buf[cursor->pos + 2]
+				&& cursor->buf[cursor->pos + 2] == ']')
+			{
+				cursor_advance(cursor);
+				cursor_advance(cursor);
+			}
+			else if (cursor->buf[cursor->pos + 1] == ']')
+				cursor_advance(cursor);
 		}
-		else if (line[*end] == ' ' || line[*end] == '\t')
+		else if (get_cursor_char(cursor) == ' '
+			|| get_cursor_char(cursor) == '\t')
 			break ;
-		(*end)++;
+		cursor_advance(cursor);
 	}
 	if (in_quotes || in_brackets)
 		return (PARSE_ERR_UNCLOSED_BLOCK);
+	*pattern = strndup(cursor->buf + start, cursor->pos - start);
+	if (!*pattern)
+		return (PARSE_ERR_ALLOC);
 	return (PARSE_OK);
 }
 
-t_parse_error	extract_action(char *line, )
+t_parse_error	extract_action(t_cursor *cursor)
 {
+	cursor_skip_line(cursor);
 	return (PARSE_OK);
 }
 
-t_parse_error	parse_rule(char *line, t_lex_file *lf)
+t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 {
-	size_t			ere_end;
+	char			*pattern;
 	t_parse_error	err;
-	size_t			action_start;
 
 	(void)lf;
-	err = extract_ere(line, &ere_end);
+	err = extract_ere(cursor, &pattern);
 	if (err != PARSE_OK)
 		return (err);
-	action_start = ere_end;
-	while (line[action_start] && (line[action_start] == ' '
-			|| line[action_start] == '\t'))
-		action_start++;
+	cursor_skip_blanks(cursor);
+	err = extract_action(cursor);
+	if (err != PARSE_OK)
+	{
+		free(pattern);
+		return (err);
+	}
+	free(pattern);
 	return (PARSE_OK);
 }
 
-t_parse_error	parse_line(char *line, t_state *state, t_lex_file *lf)
+t_parse_error	parse_dispach(t_cursor *cursor, t_state *state, t_lex_file *lf)
 {
 	switch (*state)
 	{
 	case ST_DEFINITIONS:
-		if (!strncmp(line, "%{", 2))
-			*state = ST_DECL_BLOCK;
+		cursor_skip_line(cursor);
+		// STUB en attente de la fonction qui consomme le cursor
 		break ;
 	case ST_RULES:
-		parse_rule(line, lf);
-		break ;
+		return (parse_rule(cursor, lf));
 	case ST_USER_CODE:
-		break ;
-	case ST_DECL_BLOCK:
-		if (!strncmp(line, "%}", 2))
-		{
-			*state = ST_DEFINITIONS;
-			break ;
-		}
-		strbuf_append(&lf->decl_code, line, strlen(line));
 		break ;
 	}
 	return (PARSE_OK);
@@ -107,26 +111,26 @@ t_parse_error	parse_line(char *line, t_state *state, t_lex_file *lf)
 
 t_parse_error	parse(char *buf, t_lex_file *lf)
 {
-	char		*line;
-	t_cursor	cursor;
-	int			err;
-	t_state		state;
+	t_cursor		cursor;
+	t_state			state;
+	t_parse_error	err;
 
 	state = ST_DEFINITIONS;
 	init_cursor(&cursor, buf);
 	lex_file_init(lf);
-	while (state != ST_USER_CODE)
+	while (state != ST_USER_CODE && get_cursor_char(&cursor))
 	{
-		err = get_next_cursor_line(&cursor, &line);
-		if (err == -1)
-			return (PARSE_ERR_ALLOC);
-		if (!line)
-			break ;
-		if (!strncmp(line, "%%", 2))
+		if (cursor_starts_with(&cursor, "%%"))
+		{
+			cursor_skip_line(&cursor);
 			state++;
+		}
 		else
-			parse_line(line, &state, lf);
-		free(line);
+		{
+			err = parse_dispach(&cursor, &state, lf);
+			if (err != PARSE_OK)
+				return (err);
+		}
 	}
 	lf->user_code = cursor.buf + cursor.pos;
 	if (state == ST_DEFINITIONS)
