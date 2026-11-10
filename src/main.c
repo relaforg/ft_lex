@@ -73,6 +73,7 @@ int	main(int argc, char **argv)
 	free(buf);
 	file = fopen("lex.yy.c", "w");
 	fclose(file);
+	lex_file_dump(&lf);
 	lex_file_free(&lf);
 	return (0);
 }

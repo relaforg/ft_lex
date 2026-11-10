@@ -93,14 +93,41 @@ t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 	return (PARSE_OK);
 }
 
+t_parse_error	parse_declaration(t_cursor *cursor, t_lex_file *lf)
+{
+	char	*line;
+	int		err;
+
+	if (cursor_starts_with(cursor, "%{"))
+	{
+		cursor_skip_line(cursor);
+		while (1)
+		{
+			if (cursor_starts_with(cursor, "%}"))
+			{
+				cursor_skip_line(cursor);
+				break ;
+			}
+			err = get_next_cursor_line(cursor, &line);
+			if (err == -1)
+				return (PARSE_ERR_ALLOC);
+			if (!line)
+				return (PARSE_ERR_UNCLOSED_BLOCK);
+			strbuf_append(&lf->decl_code, line, strlen(line));
+			free(line);
+		}
+	}
+	else
+		cursor_skip_line(cursor);
+	return (PARSE_OK);
+}
+
 t_parse_error	parse_dispach(t_cursor *cursor, t_state *state, t_lex_file *lf)
 {
 	switch (*state)
 	{
 	case ST_DEFINITIONS:
-		cursor_skip_line(cursor);
-		// STUB en attente de la fonction qui consomme le cursor
-		break ;
+		return (parse_declaration(cursor, lf));
 	case ST_RULES:
 		return (parse_rule(cursor, lf));
 	case ST_USER_CODE:
