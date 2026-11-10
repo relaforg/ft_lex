@@ -2,6 +2,7 @@
 #include "strbuf.h"
 #include "vec.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 void	lex_file_init(t_lex_file *lf)
 {
@@ -10,11 +11,18 @@ void	lex_file_init(t_lex_file *lf)
 	lf->user_code = NULL;
 }
 
+void	free_rule(void *rule)
+{
+	free(((t_rule *)rule)->pattern);
+	((t_rule *)rule)->pattern = NULL;
+	free(((t_rule *)rule)->action);
+	((t_rule *)rule)->action = NULL;
+}
+
 void	lex_file_free(t_lex_file *lf)
 {
 	strbuf_free(&lf->decl_code);
-	// Il faudra probablement free les char * dans les rules
-	vec_free(&lf->rules, NULL);
+	vec_free(&lf->rules, free_rule);
 	lf->user_code = NULL;
 }
 

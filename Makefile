@@ -1,6 +1,6 @@
 CC := cc
 INCLUDES := -Iincludes
-CFLAGS := -Werror -Wextra -Wall -MD $(INCLUDES)
+CFLAGS := -std=c99 -D_POSIX_C_SOURCE=200809L -Werror -Wextra -Wall -MD $(INCLUDES)
 DEBUG_CFLAGS := $(CFLAGS) -g3
 NAME := ft_lex
 LIBL_NAME := libl.a
