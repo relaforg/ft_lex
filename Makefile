@@ -14,6 +14,8 @@ SRCS := main.c \
 		lex_file.c \
 		tree.c \
 		tree_print.c \
+		nfa.c \
+		nfa_print.c \
 		parser/pattern.c \
 		parser/pcur.c \
 		parser/parser.c \

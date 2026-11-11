@@ -1,4 +1,5 @@
 #include "lex_file.h"
+#include "nfa.h"
 #include "parse.h"
 #include "pattern.h"
 #include <stddef.h>
@@ -33,7 +34,27 @@ char	*read_fd(FILE *file)
 	return (buf);
 }
 
-/* Debug : parse le motif de chaque regle et affiche son AST */
+/* Debug : construit le NFA d'un AST, marque la sortie comme acceptante
+ * pour la regle `rule_id`, puis l'affiche */
+static void	dump_nfa(t_node *tree, size_t rule_id)
+{
+	t_nfa		nfa;
+	t_frag		f;
+	t_nfa_state	*end;
+
+	nfa_init(&nfa);
+	if (nfa_build(&nfa, tree, &f) == -1)
+		printf("  nfa: build failed (operator not supported yet?)\n");
+	else
+	{
+		end = vec_get(&nfa.states, f.end);
+		end->accept = (int)rule_id;
+		nfa_print(&nfa, f.start);
+	}
+	nfa_free(&nfa);
+}
+
+/* Debug : parse le motif de chaque regle et affiche son AST + son NFA */
 static void	dump_pattern_trees(const t_lex_file *lf)
 {
 	size_t			i;
@@ -54,6 +75,7 @@ static void	dump_pattern_trees(const t_lex_file *lf)
 		else
 		{
 			tree_print(tree);
+			dump_nfa(tree, rule->id);
 			tree_free(tree);
 		}
 		i++;
