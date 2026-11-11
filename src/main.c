@@ -1,5 +1,6 @@
 #include "lex_file.h"
 #include "parse.h"
+#include "pattern.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,33 @@ char	*read_fd(FILE *file)
 		buf = strncat(buf, tmp, read_size);
 	}
 	return (buf);
+}
+
+/* Debug : parse le motif de chaque regle et affiche son AST */
+static void	dump_pattern_trees(const t_lex_file *lf)
+{
+	size_t			i;
+	t_rule			*rule;
+	t_node			*tree;
+	size_t			err_pos;
+	t_pattern_error	err;
+
+	printf("\n-- pattern trees --\n");
+	i = 0;
+	while (i < lf->rules.len)
+	{
+		rule = vec_get(&lf->rules, i);
+		printf("[%zu] \"%s\"\n", rule->id, rule->pattern);
+		err = pattern_parse(rule->pattern, &tree, &err_pos);
+		if (err != PAT_OK)
+			printf("  error %d at column %zu\n", err, err_pos);
+		else
+		{
+			tree_print(tree);
+			tree_free(tree);
+		}
+		i++;
+	}
 }
 
 int	main(int argc, char **argv)
@@ -70,10 +98,11 @@ int	main(int argc, char **argv)
 		return (-1);
 	}
 	fclose(file);
-	free(buf);
 	file = fopen("lex.yy.c", "w");
 	fclose(file);
 	lex_file_dump(&lf);
+	dump_pattern_trees(&lf);
 	lex_file_free(&lf);
+	free(buf);
 	return (0);
 }

@@ -24,7 +24,8 @@ int	vec_push(t_vec *vec, const void *elem)
 		vec->cap = new_cap;
 		vec->data = tmp;
 	}
-	memcpy(vec->data + (vec->len * vec->elem_size), elem, vec->elem_size);
+	memcpy((char *)vec->data + (vec->len * vec->elem_size), elem,
+		vec->elem_size);
 	vec->len++;
 	return (0);
 }
@@ -33,7 +34,7 @@ void	*vec_get(const t_vec *vec, size_t i)
 {
 	if (i >= vec->len)
 		return (NULL);
-	return (vec->data + vec->elem_size * i);
+	return ((char *)vec->data + vec->elem_size * i);
 }
 
 void	vec_free(t_vec *vec, void (*free_elem)(void *))
