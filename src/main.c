@@ -1,3 +1,4 @@
+#include "dfa.h"
 #include "lex_file.h"
 #include "nfa.h"
 #include "parse.h"
@@ -34,52 +35,69 @@ char	*read_fd(FILE *file)
 	return (buf);
 }
 
-/* Debug : construit le NFA d'un AST, marque la sortie comme acceptante
- * pour la regle `rule_id`, puis l'affiche */
-static void	dump_nfa(t_node *tree, size_t rule_id)
-{
-	t_nfa		nfa;
-	t_frag		f;
-	t_nfa_state	*end;
-
-	nfa_init(&nfa);
-	if (nfa_build(&nfa, tree, &f) == -1)
-		printf("  nfa: build failed (operator not supported yet?)\n");
-	else
-	{
-		end = vec_get(&nfa.states, f.end);
-		end->accept = (int)rule_id;
-		nfa_print(&nfa, f.start);
-	}
-	nfa_free(&nfa);
-}
-
-/* Debug : parse le motif de chaque regle et affiche son AST + son NFA */
-static void	dump_pattern_trees(const t_lex_file *lf)
+/* Parse le motif de chaque regle, range l'AST dans `rule->tree`
+ * (NULL si le motif est invalide) et l'affiche.
+ * Renvoie -1 si au moins un motif est invalide, 0 sinon */
+static int	parse_patterns(t_lex_file *lf)
 {
 	size_t			i;
 	t_rule			*rule;
-	t_node			*tree;
 	size_t			err_pos;
 	t_pattern_error	err;
+	int				status;
 
 	printf("\n-- pattern trees --\n");
+	status = 0;
 	i = 0;
 	while (i < lf->rules.len)
 	{
 		rule = vec_get(&lf->rules, i);
 		printf("[%zu] \"%s\"\n", rule->id, rule->pattern);
-		err = pattern_parse(rule->pattern, &tree, &err_pos);
+		err = pattern_parse(rule->pattern, &rule->tree, &err_pos);
 		if (err != PAT_OK)
-			printf("  error %d at column %zu\n", err, err_pos);
-		else
 		{
-			tree_print(tree);
-			dump_nfa(tree, rule->id);
-			tree_free(tree);
+			printf("  error %d at column %zu\n", err, err_pos);
+			status = -1;
 		}
+		else
+			tree_print(rule->tree);
 		i++;
 	}
+	return (status);
+}
+
+/* Debug : construit le DFA a partir du NFA fusionne et l'affiche */
+static void	dump_dfa(const t_nfa *nfa, int start)
+{
+	t_dfa	dfa;
+
+	printf("\n-- dfa --\n");
+	dfa_init(&dfa, nfa->states.len);
+	if (dfa_build(&dfa, nfa, start) == -1)
+		printf("  dfa: build failed\n");
+	else
+		dfa_print(&dfa);
+	dfa_free(&dfa);
+}
+
+/* Debug : fusionne les NFA de toutes les regles en un seul, l'affiche,
+ * puis construit et affiche le DFA correspondant.
+ * Suppose que chaque `rule->tree` est non NULL (voir parse_patterns) */
+static void	dump_automata(const t_lex_file *lf)
+{
+	t_nfa	nfa;
+	int		start;
+
+	printf("\n-- merged nfa --\n");
+	nfa_init(&nfa);
+	if (nfa_build_rules(&nfa, &lf->rules, &start) == -1)
+		printf("  nfa: build failed (operator not supported yet?)\n");
+	else
+	{
+		nfa_print(&nfa, start);
+		dump_dfa(&nfa, start);
+	}
+	nfa_free(&nfa);
 }
 
 int	main(int argc, char **argv)
@@ -123,7 +141,8 @@ int	main(int argc, char **argv)
 	file = fopen("lex.yy.c", "w");
 	fclose(file);
 	lex_file_dump(&lf);
-	dump_pattern_trees(&lf);
+	if (parse_patterns(&lf) == 0)
+		dump_automata(&lf);
 	lex_file_free(&lf);
 	free(buf);
 	return (0);

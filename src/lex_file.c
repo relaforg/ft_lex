@@ -1,5 +1,6 @@
 #include "lex_file.h"
 #include "strbuf.h"
+#include "tree.h"
 #include "vec.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,12 +12,17 @@ void	lex_file_init(t_lex_file *lf)
 	lf->user_code = NULL;
 }
 
-void	free_rule(void *rule)
+void	free_rule(void *vrule)
 {
-	free(((t_rule *)rule)->pattern);
-	((t_rule *)rule)->pattern = NULL;
-	free(((t_rule *)rule)->action);
-	((t_rule *)rule)->action = NULL;
+	t_rule	*rule;
+
+	rule = vrule;
+	free(rule->pattern);
+	rule->pattern = NULL;
+	free(rule->action);
+	rule->action = NULL;
+	tree_free(rule->tree);
+	rule->tree = NULL;
 }
 
 void	lex_file_free(t_lex_file *lf)

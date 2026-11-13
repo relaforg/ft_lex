@@ -161,7 +161,7 @@ t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 		return (err);
 	}
 	rule = (t_rule){.id = lf->rules.len, .pattern = pattern, .line = line,
-		.action = action};
+		.action = action, .tree = NULL};
 	vec_push(&lf->rules, &rule);
 	return (PARSE_OK);
 }

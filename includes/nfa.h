@@ -27,6 +27,7 @@ int		nfa_add_state(t_nfa *nfa, int c, int out1, int out2);
 void	nfa_init(t_nfa *nfa);
 void	nfa_free(t_nfa *nfa);
 int		nfa_build(t_nfa *nfa, t_node *root, t_frag *out);
+int		nfa_build_rules(t_nfa *nfa, const t_vec *rules, int *start);
 void	nfa_print(const t_nfa *nfa, int start);
 void	nfa_print_table(const t_nfa *nfa, int start);
 

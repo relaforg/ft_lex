@@ -3,6 +3,7 @@
 
 #include "strbuf.h"
 #include "vec.h"
+#include "tree.h"
 #include <stddef.h>
 
 typedef struct {
@@ -10,6 +11,7 @@ typedef struct {
 	char	*pattern;
 	char	*action;
 	size_t	line;
+	t_node *tree;
 }	t_rule;
 
 typedef struct {

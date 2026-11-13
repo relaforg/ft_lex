@@ -11,10 +11,14 @@ VPATH := src
 SRCS := main.c \
 		vec.c \
 		strbuf.c \
+		bitset.c \
 		lex_file.c \
 		tree.c \
 		tree_print.c \
 		nfa.c \
+		dfa.c \
+		dfa_print.c \
+		nfa_merge.c \
 		nfa_print.c \
 		parser/pattern.c \
 		parser/pcur.c \
