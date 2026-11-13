@@ -87,11 +87,82 @@ static void	eps_closure(const t_nfa *nfa, uint64_t *set, int *stack)
 	}
 }
 
+static uint64_t	*move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
+		int c)
+{
+	uint64_t	*next;
+	t_nfa_state	*tmp;
+
+	next = bitset_new(nwords);
+	if (!next)
+		return (NULL);
+	for (size_t s = 0; s < nfa->states.len; s++)
+	{
+		if (!bitset_test(set, s))
+			continue ;
+		tmp = vec_get(&nfa->states, s);
+		if (tmp->c == c)
+			bitset_set(next, tmp->out1);
+	}
+	return (next);
+}
+
+static int	find_state(const t_dfa *dfa, const uint64_t *set)
+{
+	t_dfa_state	*tmp;
+
+	for (size_t i = 0; i < dfa->states.len; i++)
+	{
+		tmp = vec_get(&dfa->states, i);
+		if (bitset_eq(tmp->set, set, dfa->nwords))
+			return (i);
+	}
+	return (NFA_NULL);
+}
+
+static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
+		int *stack)
+{
+	t_dfa_state	*curr;
+	uint64_t	*next;
+	int			j;
+
+	for (int c = 0; c < 256; c++)
+	{
+		curr = vec_get(&dfa->states, i);
+		next = move_on(nfa, curr->set, dfa->nwords, c);
+		if (!next)
+			return (-1);
+		if (bitset_is_empty(next, dfa->nwords))
+		{
+			free(next);
+			continue ;
+		}
+		eps_closure(nfa, next, stack);
+		j = find_state(dfa, next);
+		if (j != NFA_NULL)
+			free(next);
+		else
+		{
+			j = add_state(dfa, nfa, next);
+			if (j == -1)
+			{
+				free(next);
+				return (-1);
+			}
+		}
+		curr = vec_get(&dfa->states, i);
+		curr->trans[c] = j;
+	}
+	return (0);
+}
+
 int	dfa_build(t_dfa *dfa, const t_nfa *nfa, int start)
 {
 	int			*stack;
 	uint64_t	*set;
 	t_dfa_state	*tmp;
+	size_t		i;
 
 	if (start == NFA_NULL)
 		return (0);
@@ -111,6 +182,16 @@ int	dfa_build(t_dfa *dfa, const t_nfa *nfa, int start)
 		free(stack);
 		free(set);
 		return (-1);
+	}
+	i = 0;
+	while (i < dfa->states.len)
+	{
+		if (build_transitions(dfa, nfa, i, stack) == -1)
+		{
+			free(stack);
+			return (-1);
+		}
+		i++;
 	}
 	tmp = vec_get(&dfa->states, 0);
 	tmp->accept = NFA_NULL;
