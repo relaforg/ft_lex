@@ -165,6 +165,13 @@ int	main(int argc, char **argv)
 		status = write_output(&lf, &dfa);
 		dfa_free(&dfa);
 	}
+	else
+	{
+		lex_file_free(&lf);
+		free(buf);
+		dprintf(2, "Error: parsing_pattern or building automatas\n");
+		return (1);
+	}
 	lex_file_free(&lf);
 	free(buf);
 	return (status);

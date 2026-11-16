@@ -99,7 +99,10 @@ t_parse_error	extract_action(t_cursor *cursor, char **action)
 			else if (c == '{')
 				depth++;
 			else if (c == '}' && depth > 0 && --depth == 0)
+			{
+				cursor_advance(cursor);
 				break ;
+			}
 			else if (c == '"' || c == '\'')
 			{
 				quote = c;
