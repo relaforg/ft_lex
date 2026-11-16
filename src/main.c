@@ -1,4 +1,5 @@
 #include "dfa.h"
+#include "gen.h"
 #include "lex_file.h"
 #include "nfa.h"
 #include "parse.h"
@@ -66,24 +67,12 @@ static int	parse_patterns(t_lex_file *lf)
 	return (status);
 }
 
-/* Debug : construit le DFA a partir du NFA fusionne et l'affiche */
-static void	dump_dfa(const t_nfa *nfa, int start)
-{
-	t_dfa	dfa;
-
-	printf("\n-- dfa --\n");
-	dfa_init(&dfa, nfa->states.len);
-	if (dfa_build(&dfa, nfa, start) == -1)
-		printf("  dfa: build failed\n");
-	else
-		dfa_print(&dfa);
-	dfa_free(&dfa);
-}
-
-/* Debug : fusionne les NFA de toutes les regles en un seul, l'affiche,
- * puis construit et affiche le DFA correspondant.
+/* Fusionne les NFA de toutes les regles, puis construit le DFA dans `dfa`.
+ * Le NFA n'est qu'un intermediaire : il est libere avant de rendre la main.
+ * Renvoie 0 si `dfa` est construit (l'appelant devra le dfa_free),
+ * -1 sinon (rien a liberer).
  * Suppose que chaque `rule->tree` est non NULL (voir parse_patterns) */
-static void	dump_automata(const t_lex_file *lf)
+static int	build_automata(const t_lex_file *lf, t_dfa *dfa)
 {
 	t_nfa	nfa;
 	int		start;
@@ -91,13 +80,42 @@ static void	dump_automata(const t_lex_file *lf)
 	printf("\n-- merged nfa --\n");
 	nfa_init(&nfa);
 	if (nfa_build_rules(&nfa, &lf->rules, &start) == -1)
-		printf("  nfa: build failed (operator not supported yet?)\n");
-	else
 	{
-		nfa_print(&nfa, start);
-		dump_dfa(&nfa, start);
+		printf("  nfa: build failed (operator not supported yet?)\n");
+		nfa_free(&nfa);
+		return (-1);
 	}
+	nfa_print(&nfa, start);
+	printf("\n-- dfa --\n");
+	dfa_init(dfa, nfa.states.len);
+	if (dfa_build(dfa, &nfa, start) == -1)
+	{
+		printf("  dfa: build failed\n");
+		dfa_free(dfa);
+		nfa_free(&nfa);
+		return (-1);
+	}
+	dfa_print(dfa);
 	nfa_free(&nfa);
+	return (0);
+}
+
+/* Ecrit le scanner genere dans lex.yy.c. Renvoie 0 ou -1 */
+static int	write_output(const t_lex_file *lf, const t_dfa *dfa)
+{
+	FILE	*out;
+	int		status;
+
+	out = fopen("lex.yy.c", "w");
+	if (!out)
+	{
+		dprintf(2, "Error: cannot open lex.yy.c\n");
+		return (-1);
+	}
+	status = gen_write(out, lf, dfa);
+	if (fclose(out) != 0)
+		status = -1;
+	return (status);
 }
 
 int	main(int argc, char **argv)
@@ -105,6 +123,8 @@ int	main(int argc, char **argv)
 	FILE		*file;
 	char		*buf;
 	t_lex_file	lf;
+	t_dfa		dfa;
+	int			status;
 
 	argc--;
 	argv++;
@@ -138,12 +158,14 @@ int	main(int argc, char **argv)
 		return (-1);
 	}
 	fclose(file);
-	file = fopen("lex.yy.c", "w");
-	fclose(file);
 	lex_file_dump(&lf);
-	if (parse_patterns(&lf) == 0)
-		dump_automata(&lf);
+	status = -1;
+	if (parse_patterns(&lf) == 0 && build_automata(&lf, &dfa) == 0)
+	{
+		status = write_output(&lf, &dfa);
+		dfa_free(&dfa);
+	}
 	lex_file_free(&lf);
 	free(buf);
-	return (0);
+	return (status);
 }
