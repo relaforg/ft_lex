@@ -149,6 +149,11 @@ t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 	size_t			line;
 	char			*action;
 
+	if (get_cursor_char(cursor) == '\n')
+	{
+		cursor_advance(cursor);
+		return (PARSE_OK);
+	}
 	line = cursor->line;
 	err = extract_ere(cursor, &pattern);
 	if (err != PARSE_OK)

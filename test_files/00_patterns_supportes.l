@@ -21,6 +21,7 @@ xx**		printf("X_ETOILES(%s)", yytext);
 \*\*		printf("PUISSANCE");
 \(\)		printf("PARENS");
 a\|b		printf("A_PIPE_B");
+
 \\		printf("BACKSLASH");
 o\ k		printf("O_ESPACE_K");
 %%
