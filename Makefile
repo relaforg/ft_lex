@@ -73,6 +73,10 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re debug
+# Recompile ft_lex et libl.a si besoin, puis lance les tests de la phase 2
+phase2: $(NAME) $(LIBL_NAME)
+	$(MAKE) -C tester p2
+
+.PHONY: all clean fclean re debug phase2
 
 -include $(DEPS) $(LIBL_DEPS)

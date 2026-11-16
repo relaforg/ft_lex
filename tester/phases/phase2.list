@@ -1,0 +1,87 @@
+# Tests qui relevent de la phase 2 de ft_lex (voir la spec de phase 2).
+# Une ligne par test : <categorie>/<nom>, ou <categorie>/* pour toute la categorie.
+# Les lignes qui commencent par # sont ignorees.
+#
+# Critere : le .l n'utilise que la syntaxe de phase 2
+#   - section 1 : blocs %{ %} et lignes vides
+#   - section 2 : une regle par ligne, action sur une seule ligne
+#   - motifs : litteraux, concatenation, |, *, ( ), echappements \x et \n \t
+#   - actions : yytext, yyleng, ECHO, return (pas de yymore, yyless, input...)
+# ou bien c'est un cas d'erreur de la section "Gestion des erreurs".
+
+# --- parse : structure du .l acceptee ---
+parse/sep01
+parse/sep04
+parse/sep10
+parse/sep12
+parse/sep15
+parse/sep16
+parse/sep17
+parse/sep19
+parse/d01
+parse/d05
+parse/d07
+parse/d09
+parse/d10
+parse/d12
+parse/d16
+parse/r05
+parse/a03
+parse/a10
+parse/a17
+parse/a20
+parse/a21
+parse/a22
+parse/z06
+parse/p03
+parse/p30
+parse/u01
+parse/u02
+parse/x04
+parse/x01
+
+# --- parse : cas d'erreur de la spec ---
+# aucun %%
+parse/sep09
+parse/sep20
+# %{ sans %}
+parse/d06
+# parentheses desequilibrees
+parse/p04
+parse/p08
+parse/p09
+# alternative vide : ()
+parse/p26
+# regle sans action
+parse/a08
+parse/z02
+parse/p36
+
+# --- regex : litteraux, |, *, ( ), echappements ---
+regex/lit
+regex/star
+regex/alt
+regex/group_alt
+regex/prec_star
+regex/prec_alt
+regex/esc_n
+regex/esc_t
+regex/esc_backslash
+regex/esc_ops
+regex/esc_quote
+regex/esc_slash
+regex/esc_brace
+regex/esc_ordinary
+regex/longest
+regex/backtrack
+
+# --- matching ---
+matching/empty_input
+matching/newline_rule
+matching/many_rules
+
+# --- actions : return et appels repetes a yylex ---
+actions/rescan_loop
+
+# --- robust : ft_lex ne doit jamais planter, il peut refuser ---
+robust/*

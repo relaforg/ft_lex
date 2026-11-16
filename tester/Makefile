@@ -10,6 +10,7 @@
 #   make golden     regenere expected/ avec lex (necessite lex)
 #   make selftest   lance la suite sur lex lui-meme (valide le testeur)
 #   make one T=cat/nom   un seul test
+#   make p2 / vp2   uniquement les tests de la phase 2 (liste : phases/phase2.list)
 #
 # Variables : FT_LEX=../ft_lex  LIBL=../libl.a  CC=cc  COMPRESS_FLAG=
 #             VERBOSE=0 (grille compacte)  DETAIL_LINES=12 (lignes de detail par echec)
@@ -39,6 +40,16 @@ $(addprefix v,$(CATS)):
 one:
 	@ONLY=$(notdir $(T)) $(RUN) $(patsubst %/,%,$(dir $(T)))
 
+# Phase 2 : seules les categories a base de .l ont des tests selectionnes
+P2_LIST := $(CURDIR)/phases/phase2.list
+P2_CATS := parse regex matching actions robust
+
+p2:
+	@SELECT=$(P2_LIST) $(RUN) $(P2_CATS)
+
+vp2:
+	@SELECT=$(P2_LIST) VALGRIND=1 $(RUN) $(P2_CATS)
+
 fuzz:
 	@python3 scripts/fuzz.py mutate
 
@@ -58,4 +69,4 @@ selftest: stub
 clean:
 	rm -rf .work logs
 
-.PHONY: all m v vm one fuzz fuzzdiff golden stub selftest clean $(CATS) $(addprefix v,$(CATS))
+.PHONY: all m v vm one p2 vp2 fuzz fuzzdiff golden stub selftest clean $(CATS) $(addprefix v,$(CATS))

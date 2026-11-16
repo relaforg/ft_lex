@@ -134,7 +134,7 @@ int	main(int argc, char **argv)
 		if (!file)
 		{
 			dprintf(2, "Error: cannot open stdin\n");
-			return (-1);
+			return (1);
 		}
 	}
 	else
@@ -143,19 +143,19 @@ int	main(int argc, char **argv)
 		if (!file)
 		{
 			dprintf(2, "Error: cannot open %s\n", argv[0]);
-			return (-1);
+			return (1);
 		}
 	}
 	buf = read_fd(file);
 	if (!buf)
 	{
 		dprintf(2, "Error: cannot read\n");
-		return (-1);
+		return (1);
 	}
 	if (parse(buf, &lf))
 	{
 		dprintf(2, "Error: parsing error\n");
-		return (-1);
+		return (1);
 	}
 	fclose(file);
 	lex_file_dump(&lf);

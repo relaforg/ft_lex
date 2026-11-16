@@ -90,6 +90,13 @@ case_one() {
 	res_ok "$name" "$desc"
 }
 
+# selected CAT NAME : vrai si SELECT est vide, ou si le fichier SELECT
+# contient la ligne "CAT/NAME" ou "CAT/*" (ex. phases/phase2.list)
+selected() {
+	[ -z "$SELECT" ] && return 0
+	grep -qxF -e "$1/$2" -e "$1/*" "$SELECT"
+}
+
 run_cases() {
 	local cat=$1
 	begin_cat "$cat"
@@ -97,6 +104,7 @@ run_cases() {
 	while IFS=$'\t' read -r name tag desc <&3; do
 		[ -z "$name" ] && continue
 		[ -n "$ONLY" ] && [ "$ONLY" != "$name" ] && continue
+		selected "$cat" "$name" || continue
 		case_one "$cat" "$name" "$tag" "$desc"
 	done 3< "$ROOT/tests/$cat/index"
 	end_cat

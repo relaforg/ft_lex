@@ -205,7 +205,6 @@ static void	emit_raw(FILE *out, char *raw)
 
 int	gen_write(FILE *out, const t_lex_file *lf, const t_dfa *dfa)
 {
-	(void)dfa;
 	emit_prologue(out);
 	emit_raw(out, lf->decl_code.data);
 	emit_tables(out, dfa);
