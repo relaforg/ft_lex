@@ -36,8 +36,29 @@ char	*read_fd(FILE *file)
 	return (buf);
 }
 
-/* Parse le motif de chaque regle, range l'AST dans `rule->tree`
- * (NULL si le motif est invalide) et l'affiche.
+/* Lit tout le fichier `path` (stdin si NULL). Renvoie NULL en cas d'erreur */
+static char	*read_input(const char *path)
+{
+	FILE	*file;
+	char	*buf;
+
+	file = stdin;
+	if (path)
+		file = fopen(path, "r");
+	if (!file)
+	{
+		dprintf(2, "Error: cannot open %s\n", path);
+		return (NULL);
+	}
+	buf = read_fd(file);
+	if (file != stdin)
+		fclose(file);
+	if (!buf)
+		dprintf(2, "Error: cannot read input\n");
+	return (buf);
+}
+
+/* Parse le motif de chaque regle et range l'AST dans `rule->tree`.
  * Renvoie -1 si au moins un motif est invalide, 0 sinon */
 static int	parse_patterns(t_lex_file *lf)
 {
@@ -47,57 +68,44 @@ static int	parse_patterns(t_lex_file *lf)
 	t_pattern_error	err;
 	int				status;
 
-	printf("\n-- pattern trees --\n");
 	status = 0;
 	i = 0;
 	while (i < lf->rules.len)
 	{
 		rule = vec_get(&lf->rules, i);
-		printf("[%zu] \"%s\"\n", rule->id, rule->pattern);
 		err = pattern_parse(rule->pattern, &rule->tree, &err_pos);
 		if (err != PAT_OK)
 		{
-			printf("  error %d at column %zu\n", err, err_pos);
+			dprintf(2, "Error: rule %zu: invalid pattern (error %d at column %zu)\n",
+				rule->id, err, err_pos);
 			status = -1;
 		}
-		else
-			tree_print(rule->tree);
 		i++;
 	}
 	return (status);
 }
 
-/* Fusionne les NFA de toutes les regles, puis construit le DFA dans `dfa`.
- * Le NFA n'est qu'un intermediaire : il est libere avant de rendre la main.
- * Renvoie 0 si `dfa` est construit (l'appelant devra le dfa_free),
- * -1 sinon (rien a liberer).
- * Suppose que chaque `rule->tree` est non NULL (voir parse_patterns) */
-static int	build_automata(const t_lex_file *lf, t_dfa *dfa)
+/* Construit le DFA a partir des regles, via un NFA intermediaire.
+ * Renvoie 0 si `dfa` est construit (a liberer avec dfa_free), -1 sinon */
+static int	build_dfa(const t_lex_file *lf, t_dfa *dfa)
 {
 	t_nfa	nfa;
 	int		start;
+	int		status;
 
-	printf("\n-- merged nfa --\n");
 	nfa_init(&nfa);
-	if (nfa_build_rules(&nfa, &lf->rules, &start) == -1)
+	status = nfa_build_rules(&nfa, &lf->rules, &start);
+	if (status == 0)
 	{
-		printf("  nfa: build failed (operator not supported yet?)\n");
-		nfa_free(&nfa);
-		return (-1);
+		dfa_init(dfa, nfa.states.len);
+		status = dfa_build(dfa, &nfa, start);
+		if (status != 0)
+			dfa_free(dfa);
 	}
-	nfa_print(&nfa, start);
-	printf("\n-- dfa --\n");
-	dfa_init(dfa, nfa.states.len);
-	if (dfa_build(dfa, &nfa, start) == -1)
-	{
-		printf("  dfa: build failed\n");
-		dfa_free(dfa);
-		nfa_free(&nfa);
-		return (-1);
-	}
-	dfa_print(dfa);
 	nfa_free(&nfa);
-	return (0);
+	if (status != 0)
+		dprintf(2, "Error: cannot build automata\n");
+	return (status);
 }
 
 /* Ecrit le scanner genere dans lex.yy.c. Renvoie 0 ou -1 */
@@ -118,61 +126,34 @@ static int	write_output(const t_lex_file *lf, const t_dfa *dfa)
 	return (status);
 }
 
+/* Patterns -> DFA -> lex.yy.c. Renvoie 0 ou -1 */
+static int	generate(t_lex_file *lf)
+{
+	t_dfa	dfa;
+	int		status;
+
+	if (parse_patterns(lf) != 0 || build_dfa(lf, &dfa) != 0)
+		return (-1);
+	status = write_output(lf, &dfa);
+	dfa_free(&dfa);
+	return (status);
+}
+
 int	main(int argc, char **argv)
 {
-	FILE		*file;
 	char		*buf;
 	t_lex_file	lf;
-	t_dfa		dfa;
 	int			status;
 
-	argc--;
-	argv++;
-	if (argc <= 0)
-	{
-		file = stdin;
-		if (!file)
-		{
-			dprintf(2, "Error: cannot open stdin\n");
-			return (1);
-		}
-	}
-	else
-	{
-		file = fopen(argv[0], "r");
-		if (!file)
-		{
-			dprintf(2, "Error: cannot open %s\n", argv[0]);
-			return (1);
-		}
-	}
-	buf = read_fd(file);
+	buf = read_input(argc > 1 ? argv[1] : NULL);
 	if (!buf)
-	{
-		dprintf(2, "Error: cannot read\n");
 		return (1);
-	}
-	if (parse(buf, &lf))
-	{
-		dprintf(2, "Error: parsing error\n");
-		return (1);
-	}
-	fclose(file);
-	lex_file_dump(&lf);
 	status = -1;
-	if (parse_patterns(&lf) == 0 && build_automata(&lf, &dfa) == 0)
-	{
-		status = write_output(&lf, &dfa);
-		dfa_free(&dfa);
-	}
+	if (parse(buf, &lf) != PARSE_OK)
+		dprintf(2, "Error: parsing error\n");
 	else
-	{
-		lex_file_free(&lf);
-		free(buf);
-		dprintf(2, "Error: parsing_pattern or building automatas\n");
-		return (1);
-	}
+		status = generate(&lf);
 	lex_file_free(&lf);
 	free(buf);
-	return (status);
+	return (status != 0);
 }

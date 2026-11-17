@@ -87,24 +87,32 @@ static void	eps_closure(const t_nfa *nfa, uint64_t *set, int *stack)
 	}
 }
 
-static uint64_t	*move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
-		int c)
+static int	move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
+		uint64_t *next[DFA_NCHARS])
 {
-	uint64_t	*next;
-	t_nfa_state	*tmp;
+	const t_nfa_state	*state;
 
-	next = bitset_new(nwords);
-	if (!next)
-		return (NULL);
-	for (size_t s = 0; s < nfa->states.len; s++)
+	for (size_t w = 0; w < nwords; w++)
 	{
-		if (!bitset_test(set, s))
+		if (!set[w])
 			continue ;
-		tmp = vec_get(&nfa->states, s);
-		if (tmp->c == c)
-			bitset_set(next, tmp->out1);
+		for (size_t s = w * 64; s < nfa->states.len && s < (w * 64) + 64; s++)
+		{
+			if (!bitset_test(set, s))
+				continue ;
+			state = vec_get(&nfa->states, s);
+			if (state->c == NFA_EPS)
+				continue ;
+			if (!next[state->c])
+			{
+				next[state->c] = bitset_new(nwords);
+				if (!next[state->c])
+					return (-1);
+			}
+			bitset_set(next[state->c], state->out1);
+		}
 	}
-	return (next);
+	return (0);
 }
 
 static int	find_state(const t_dfa *dfa, const uint64_t *set)
@@ -120,34 +128,45 @@ static int	find_state(const t_dfa *dfa, const uint64_t *set)
 	return (NFA_NULL);
 }
 
+static void	free_next(uint64_t *next[DFA_NCHARS])
+{
+	for (size_t i = 0; i < DFA_NCHARS; i++)
+	{
+		if (next[i])
+			free(next[i]);
+	}
+}
+
 static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
 		int *stack)
 {
 	t_dfa_state	*curr;
-	uint64_t	*next;
 	int			j;
+	uint64_t	*next[DFA_NCHARS] = {NULL};
 
-	for (int c = 0; c < 256; c++)
+	curr = vec_get(&dfa->states, i);
+	if (move_on(nfa, curr->set, dfa->nwords, next) == -1)
 	{
-		curr = vec_get(&dfa->states, i);
-		next = move_on(nfa, curr->set, dfa->nwords, c);
-		if (!next)
-			return (-1);
-		if (bitset_is_empty(next, dfa->nwords))
-		{
-			free(next);
+		free_next(next);
+		return (-1);
+	}
+	for (int c = 0; c < DFA_NCHARS; c++)
+	{
+		if (!next[c])
 			continue ;
-		}
-		eps_closure(nfa, next, stack);
-		j = find_state(dfa, next);
+		eps_closure(nfa, next[c], stack);
+		j = find_state(dfa, next[c]);
 		if (j != NFA_NULL)
-			free(next);
+		{
+			free(next[c]);
+			next[c] = NULL;
+		}
 		else
 		{
-			j = add_state(dfa, nfa, next);
+			j = add_state(dfa, nfa, next[c]);
 			if (j == -1)
 			{
-				free(next);
+				free_next(next);
 				return (-1);
 			}
 		}

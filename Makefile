@@ -35,7 +35,7 @@ LIBL_SRCS := libl/main.c \
 LIBL_OBJS = $(addprefix $(BUILD_DIR)/, $(LIBL_SRCS:.c=.o))
 LIBL_DEPS = $(LIBL_OBJS:.o=.d)
 
-all: $(NAME)
+all: $(NAME) $(LIBL_NAME)
 
 $(NAME): $(OBJS)
 	$(CC) -o $(NAME) $(OBJS)
