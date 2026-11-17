@@ -129,6 +129,10 @@ t_node	*parse_atom(t_pcur *p)
 	{
 		pcur_advance(p);
 		c = pcur_peek(p);
+		if (c == 'n')
+			c = '\n';
+		else if (c == 't')
+			c = '\t';
 	}
 	else if (c == '[' || c == '.' || c == '+' || c == '?' || c == '{'
 		|| c == '^' || c == '$' || c == '"')
