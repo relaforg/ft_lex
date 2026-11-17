@@ -79,9 +79,6 @@ static void	eps_closure(const t_nfa *nfa, uint64_t *set, int *stack,
 	const t_nfa_state	*state;
 
 	top = 0;
-	// for (size_t s = 0; s < nfa->states.len; s++)
-	// 	if (bitset_test(set, s))
-	// 		stack[top++] = s;
 	for (size_t w = 0; w < nwords; w++)
 	{
 		if (!set[w])
