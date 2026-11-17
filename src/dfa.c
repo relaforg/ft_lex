@@ -217,3 +217,46 @@ int	dfa_build(t_dfa *dfa, const t_nfa *nfa, int start)
 	free(stack);
 	return (0);
 }
+
+static char	same_column(const t_dfa *dfa, int c1, int c2)
+{
+	t_dfa_state	*tmp;
+
+	for (size_t i = 0; i < dfa->states.len; i++)
+	{
+		tmp = vec_get(&dfa->states, i);
+		if (tmp->trans[c1] != tmp->trans[c2])
+			return (0);
+	}
+	return (1);
+}
+
+int	dfa_equiv_classes(const t_dfa *dfa, int ec[DFA_NCHARS], int rep[DFA_NCHARS])
+{
+	int		n;
+	char	skip;
+
+	n = 0;
+	skip = 0;
+	for (size_t c = 0; c < 256; c++)
+	{
+		for (int k = 0; k < n; k++)
+		{
+			if (same_column(dfa, rep[k], c))
+			{
+				ec[c] = k;
+				skip = 1;
+				break ;
+			}
+		}
+		if (skip)
+		{
+			skip = 0;
+			continue ;
+		}
+		rep[n] = c;
+		ec[c] = n;
+		n++;
+	}
+	return (n);
+}

@@ -24,5 +24,6 @@ void	dfa_init(t_dfa *dfa, size_t nfa_len);
 void	dfa_free(t_dfa *dfa);
 int		dfa_build(t_dfa *dfa, const t_nfa *nfa, int start);
 void	dfa_print(const t_dfa *dfa);
+int		dfa_equiv_classes(const t_dfa *dfa, int ec[DFA_NCHARS], int rep[DFA_NCHARS]);
 
 #endif
