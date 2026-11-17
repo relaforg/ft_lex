@@ -27,21 +27,25 @@ void	dfa_free(t_dfa *dfa)
 	dfa->nwords = 0;
 }
 
-static int	rule_of_set(const t_nfa *nfa, const uint64_t *set)
+static int	rule_of_set(const t_nfa *nfa, const uint64_t *set, size_t nwords)
 {
 	int					best;
-	size_t				i;
 	const t_nfa_state	*state;
 
 	best = NFA_NULL;
-	i = 0;
-	while (i < nfa->states.len)
+	for (size_t w = 0; w < nwords; w++)
 	{
-		state = vec_get(&nfa->states, i);
-		if (state->accept != NFA_NULL && bitset_test(set, i)
-			&& (best <= NFA_NULL || best > state->accept))
-			best = state->accept;
-		i++;
+		if (!set[w])
+			continue ;
+		for (size_t i = w * 64; i < nfa->states.len && i < (w * 64) + 64; i++)
+		{
+			if (!bitset_test(set, i))
+				continue ;
+			state = vec_get(&nfa->states, i);
+			if (state->accept != NFA_NULL && (best <= NFA_NULL
+					|| best > state->accept))
+				best = state->accept;
+		}
 	}
 	return (best);
 }
@@ -53,7 +57,7 @@ static int	add_state(t_dfa *dfa, const t_nfa *nfa, uint64_t *set)
 	state.set = set;
 	for (int c = 0; c < DFA_NCHARS; c++)
 		state.trans[c] = NFA_NULL;
-	state.accept = rule_of_set(nfa, state.set);
+	state.accept = rule_of_set(nfa, state.set, dfa->nwords);
 	if (vec_push(&dfa->states, &state) == -1)
 		return (-1);
 	return (dfa->states.len - 1);
@@ -68,15 +72,26 @@ static void	push_if_new(uint64_t *set, int *stack, int *top, int s)
 	}
 }
 
-static void	eps_closure(const t_nfa *nfa, uint64_t *set, int *stack)
+static void	eps_closure(const t_nfa *nfa, uint64_t *set, int *stack,
+		size_t nwords)
 {
 	int					top;
 	const t_nfa_state	*state;
 
 	top = 0;
-	for (size_t s = 0; s < nfa->states.len; s++)
-		if (bitset_test(set, s))
-			stack[top++] = s;
+	// for (size_t s = 0; s < nfa->states.len; s++)
+	// 	if (bitset_test(set, s))
+	// 		stack[top++] = s;
+	for (size_t w = 0; w < nwords; w++)
+	{
+		if (!set[w])
+			continue ;
+		for (size_t s = w * 64; s < nfa->states.len && s < (w * 64) + 64; s++)
+		{
+			if (bitset_test(set, s))
+				stack[top++] = s;
+		}
+	}
 	while (top > 0)
 	{
 		state = vec_get(&nfa->states, stack[--top]);
@@ -154,7 +169,7 @@ static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
 	{
 		if (!next[c])
 			continue ;
-		eps_closure(nfa, next[c], stack);
+		eps_closure(nfa, next[c], stack, dfa->nwords);
 		j = find_state(dfa, next[c]);
 		if (j != NFA_NULL)
 		{
@@ -195,7 +210,7 @@ int	dfa_build(t_dfa *dfa, const t_nfa *nfa, int start)
 		return (-1);
 	}
 	bitset_set(set, start);
-	eps_closure(nfa, set, stack);
+	eps_closure(nfa, set, stack, dfa->nwords);
 	if (add_state(dfa, nfa, set) == -1)
 	{
 		free(stack);
