@@ -6,17 +6,17 @@
 /*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 10:20:12 by relaforg          #+#    #+#             */
-/*   Updated: 2026/03/01 18:21:15 by secros           ###   ########.fr       */
+/*   Updated: 2026/11/18 08:10:57 by relaforg         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "hash_table.h"
 #include <stdlib.h>
 
-void	free_hashtable(t_hashtable *tab, bool delete)
+void	free_hashtable(t_htable *tab)
 {
-	t_node	*curr;
-	t_node	*aux;
+	t_hnode	*curr;
+	t_hnode	*aux;
 	int		i;
 
 	i = 0;
@@ -27,11 +27,6 @@ void	free_hashtable(t_hashtable *tab, bool delete)
 		{
 			aux = curr;
 			curr = curr->next;
-			if (delete)
-			{
-				free((void *)aux->key);
-				free((void *)aux->value);
-			}
 			free(aux);
 		}
 		i++;
@@ -40,17 +35,17 @@ void	free_hashtable(t_hashtable *tab, bool delete)
 	free(tab);
 }
 
-float	load_factor(t_hashtable *tab)
+float	load_factor(t_htable *tab)
 {
 	return ((float)tab->el_nbr / (float)tab->size);
 }
 
-void	move_table(t_hashtable *old, t_hashtable *new)
+void	move_table(t_htable *old, t_htable *new)
 {
-	int			i;
-	t_node		*curr;
-	t_node		*aux;
-	int			index;
+	int		i;
+	t_hnode	*curr;
+	t_hnode	*aux;
+	int		index;
 
 	i = 0;
 	while (i < old->size)
@@ -68,16 +63,15 @@ void	move_table(t_hashtable *old, t_hashtable *new)
 	}
 }
 
-void	increase_hashtable_size(t_hashtable **tab)
+void	increase_hashtable_size(t_htable **tab)
 {
-	t_hashtable	*new;
-	t_hashtable	*tmp;
+	t_htable	*new;
+	t_htable	*tmp;
 
 	tmp = *tab;
-	new = init_hashtable(tmp->size * 2);
+	new = init_hashtable(tmp->size * 2, tmp->nwords);
 	if (new == NULL)
 		return ;
-	new->strategie = tmp->strategie;
 	move_table(tmp, new);
 	new->el_nbr = tmp->el_nbr;
 	*tab = new;

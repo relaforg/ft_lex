@@ -15,6 +15,7 @@ make v            # tout l'obligatoire sous valgrind
 make one T=regex/trail_var   # un seul test
 make ext          # bonus : extensions flex
 make compress COMPRESS_FLAG=-C   # bonus compression, avec TON option
+make memfail      # sécurité mémoire : fait échouer chaque malloc, un par un (ASan)
 make fuzz         # mutations aléatoires des .l : ft_lex ne doit jamais planter
 make fuzzdiff     # entrées aléatoires : ton scanner contre celui de lex
 ```
@@ -45,6 +46,34 @@ Un test de type « fichier `.l` » fonctionne ainsi :
 3. Si le fichier est valide, `lex.yy.c` est compilé avec ta libl, lancé sur chaque `nom.in*`, et sa sortie est comparée **octet par octet** à celle du scanner de lex.
 
 Pour un fichier invalide, ton message d'erreur n'est pas comparé à celui de lex, car le format est libre. Il doit seulement contenir `nom.l:<ligne>`, sinon le test passe en WARN.
+
+## Sécurité mémoire quand malloc échoue (`make memfail`)
+
+Les tests classiques ne passent que par le chemin « tout va bien ». Les chemins d'erreur (un `malloc` qui renvoie `NULL`) ne sont jamais exécutés, et c'est là que se cachent les fuites, les double free et les déréférencements de `NULL`.
+
+`make memfail` :
+1. recompile ft_lex dans `.work/memfail/` avec AddressSanitizer + UBSan, en interceptant `malloc`, `calloc`, `realloc`, `strdup`, `strndup` et `fopen` (`lib/failalloc/`, via `ld --wrap`) ;
+2. pour chaque `.l`, compte les K allocations d'une exécution normale ;
+3. relance ft_lex K fois, en faisant échouer la 1ʳᵉ, puis la 2ᵉ… puis la K-ième allocation.
+
+À chaque essai, ft_lex doit :
+
+| Vérification | Sinon |
+|---|---|
+| ne pas planter ni boucler | KO |
+| n'avoir aucune erreur ASan/UBSan (fuite, double free, use-after-free, accès à `NULL`…) | KO |
+| ne pas finir avec `exit 0` en produisant une sortie différente de la normale (l'échec aurait été ignoré) | KO |
+| afficher un message d'erreur quand il échoue | WARN |
+
+Chaque KO indique le bug, **l'allocation qu'on a fait échouer** et une commande pour le reproduire, par exemple :
+
+```sh
+cd $(mktemp -d) && FAILALLOC_AT=61 FAILALLOC_TRACE=1 <tester>/.work/memfail/ft_lex fichier.l
+```
+
+`FAILALLOC_TRACE=1` affiche la pile de l'appel qu'on fait échouer. La même commande sous `gdb` permet de suivre le chemin d'erreur pas à pas. En fin de catégorie, un résumé regroupe les bugs distincts, toutes entrées confondues.
+
+Variables : `MEMFAIL_FILES="a.l b.l"` (défaut : tous les `.l` des catégories obligatoires), `MEMFAIL_MODES="once from"` (`from` : la N-ième allocation **et toutes les suivantes** échouent, ce qui teste le code de nettoyage), `MEMFAIL_MAX=300` (au-delà, les essais sont échantillonnés), `MEMFAIL_JOBS`. Linux uniquement (`ld --wrap`).
 
 ## Étiquettes
 

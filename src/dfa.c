@@ -1,5 +1,6 @@
 #include "bitset.h"
 #include "dfa.h"
+#include "hash_table.h"
 #include "nfa.h"
 #include "vec.h"
 #include <stdlib.h>
@@ -9,6 +10,7 @@ void	dfa_init(t_dfa *dfa, size_t nfa_len)
 {
 	vec_init(&dfa->states, sizeof(t_dfa_state));
 	dfa->nwords = bitset_nwords(nfa_len);
+	dfa->index = init_hashtable(2048, dfa->nwords);
 }
 
 void	dfa_state_free(void *vstate)
@@ -25,6 +27,7 @@ void	dfa_free(t_dfa *dfa)
 {
 	vec_free(&dfa->states, dfa_state_free);
 	dfa->nwords = 0;
+	free_hashtable(dfa->index);
 }
 
 static int	rule_of_set(const t_nfa *nfa, const uint64_t *set, size_t nwords)
@@ -50,7 +53,8 @@ static int	rule_of_set(const t_nfa *nfa, const uint64_t *set, size_t nwords)
 	return (best);
 }
 
-static int	add_state(t_dfa *dfa, const t_nfa *nfa, uint64_t *set)
+static int	add_state(t_dfa *dfa, const t_nfa *nfa, uint64_t *set,
+		size_t hash_key)
 {
 	t_dfa_state	state;
 
@@ -59,6 +63,8 @@ static int	add_state(t_dfa *dfa, const t_nfa *nfa, uint64_t *set)
 		state.trans[c] = NFA_NULL;
 	state.accept = rule_of_set(nfa, state.set, dfa->nwords);
 	if (vec_push(&dfa->states, &state) == -1)
+		return (-1);
+	if (insert(&dfa->index, set, hash_key, dfa->states.len - 1) == -1)
 		return (-1);
 	return (dfa->states.len - 1);
 }
@@ -127,16 +133,12 @@ static int	move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
 	return (0);
 }
 
-static int	find_state(const t_dfa *dfa, const uint64_t *set)
+static int	find_state(const t_dfa *dfa, const uint64_t *set, size_t hash_key)
 {
-	t_dfa_state	*tmp;
+	t_hnode	*tmp;
 
-	for (size_t i = 0; i < dfa->states.len; i++)
-	{
-		tmp = vec_get(&dfa->states, i);
-		if (bitset_eq(tmp->set, set, dfa->nwords))
-			return (i);
-	}
+	if ((tmp = search(dfa->index, set, hash_key)) != NULL)
+		return (tmp->value);
 	return (NFA_NULL);
 }
 
@@ -155,6 +157,7 @@ static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
 	t_dfa_state	*curr;
 	int			j;
 	uint64_t	*next[DFA_NCHARS] = {NULL};
+	size_t		hash_key;
 
 	curr = vec_get(&dfa->states, i);
 	if (move_on(nfa, curr->set, dfa->nwords, next) == -1)
@@ -167,7 +170,8 @@ static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
 		if (!next[c])
 			continue ;
 		eps_closure(nfa, next[c], stack, dfa->nwords);
-		j = find_state(dfa, next[c]);
+		hash_key = hash(next[c], dfa->nwords);
+		j = find_state(dfa, next[c], hash_key);
 		if (j != NFA_NULL)
 		{
 			free(next[c]);
@@ -175,7 +179,7 @@ static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
 		}
 		else
 		{
-			j = add_state(dfa, nfa, next[c]);
+			j = add_state(dfa, nfa, next[c], hash_key);
 			if (j == -1)
 			{
 				free_next(next);
@@ -184,6 +188,7 @@ static int	build_transitions(t_dfa *dfa, const t_nfa *nfa, size_t i,
 		}
 		curr = vec_get(&dfa->states, i);
 		curr->trans[c] = j;
+		next[c] = NULL;
 	}
 	return (0);
 }
@@ -194,6 +199,7 @@ int	dfa_build(t_dfa *dfa, const t_nfa *nfa, int start)
 	uint64_t	*set;
 	t_dfa_state	*tmp;
 	size_t		i;
+	size_t		hash_key;
 
 	if (start == NFA_NULL)
 		return (0);
@@ -208,7 +214,8 @@ int	dfa_build(t_dfa *dfa, const t_nfa *nfa, int start)
 	}
 	bitset_set(set, start);
 	eps_closure(nfa, set, stack, dfa->nwords);
-	if (add_state(dfa, nfa, set) == -1)
+	hash_key = hash(set, dfa->nwords);
+	if (add_state(dfa, nfa, set, hash_key) == -1)
 	{
 		free(stack);
 		free(set);

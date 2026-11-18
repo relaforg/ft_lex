@@ -1,6 +1,7 @@
 #ifndef DFA_H
 # define DFA_H
 
+#include "hash_table.h"
 #include "nfa.h"
 # include "vec.h"
 # include <stdint.h>
@@ -16,8 +17,9 @@ typedef struct
 
 typedef struct
 {
-	t_vec	states;
-	size_t	nwords;
+	t_vec		states;
+	size_t		nwords;
+	t_htable	*index;
 }	t_dfa;
 
 void	dfa_init(t_dfa *dfa, size_t nfa_len);

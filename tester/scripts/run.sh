@@ -8,6 +8,7 @@ DIR=$(dirname "$0")
 . "$DIR/libl.sh"
 . "$DIR/symbols.sh"
 . "$DIR/compress.sh"
+. "$DIR/memfail.sh"
 
 require_ft_lex
 if [ "$VALGRIND" = 1 ] && ! command -v valgrind > /dev/null; then
@@ -24,6 +25,7 @@ for cat in "$@"; do
 		libl) run_libl ;;
 		symbols) run_symbols ;;
 		compress) run_compress ;;
+		memfail) run_memfail ;;
 		*)
 			if [ -f "$ROOT/tests/$cat/index" ]; then
 				[ "$cat" != robust ] && require_libl

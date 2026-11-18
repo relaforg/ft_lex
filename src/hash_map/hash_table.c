@@ -1,15 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   hash_table.c                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/28 09:42:41 by relaforg          #+#    #+#             */
-/*   Updated: 2026/11/17 15:14:25 by relaforg         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
+#include "bitset.h"
 #include "hash_table.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -32,7 +21,7 @@ size_t	hash(const uint64_t *key, size_t nwords)
 	return (hash);
 }
 
-t_htable	*init_hashtable(int table_size)
+t_htable	*init_hashtable(int table_size, size_t nwords)
 {
 	t_htable	*tab;
 
@@ -41,7 +30,7 @@ t_htable	*init_hashtable(int table_size)
 		return (NULL);
 	tab->size = table_size;
 	tab->el_nbr = 0;
-	tab->strategie = DEFAULT_MODE;
+	tab->nwords = nwords;
 	tab->table = calloc(sizeof(t_hnode *), table_size);
 	if (tab->table == NULL)
 	{
@@ -51,44 +40,36 @@ t_htable	*init_hashtable(int table_size)
 	return (tab);
 }
 
-void	insert(t_htable **tab, const uint64_t *key, const int *value)
+int	insert(t_htable **tab, const uint64_t *key, size_t hash_key, int value)
 {
-	t_hnode	*new;
+	t_hnode		*new;
+	t_htable	*tmp;
 
+	tmp = *tab;
 	new = malloc(sizeof(t_hnode));
 	if (new == NULL)
-	{
-		free((void *)key);
-		free((void *)value);
-		return ;
-	}
+		return (-1);
 	new->key = key;
 	new->value = value;
-	new->hash = hash(key, (*tab)->nwords);
-	if (smart_insert(tab, new) == NULL)
-	{
-		(*tab)->el_nbr--;
-		return ;
-	}
+	new->hash = hash_key;
+	new->next = tmp->table[hash_key & (tmp->size - 1)];
+	tmp->table[hash_key & (tmp->size - 1)] = new;
+	tmp->el_nbr++;
 	if (load_factor((*tab)) >= UPPER_TRESHOLD)
 		increase_hashtable_size(tab);
+	return (0);
 }
 
-t_node	*search(t_hashtable *tab, const char *key, size_t hashed_key)
+t_hnode	*search(t_htable *tab, const uint64_t *key, size_t hashed_key)
 {
-	t_node	*curr;
+	t_hnode	*curr;
 
 	curr = tab->table[hashed_key & (tab->size - 1)];
 	while (curr != NULL)
 	{
-		if (hashed_key == curr->hash && !ft_fstrcmp(curr->key, key))
+		if (hashed_key == curr->hash && bitset_eq(curr->key, key, tab->nwords))
 			return (curr);
 		curr = curr->next;
 	}
 	return (NULL);
-}
-
-void	hashtable_set_strategie(t_hashtable **tab, enum e_collide opt)
-{
-	(*tab)->strategie = opt;
 }

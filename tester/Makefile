@@ -5,6 +5,8 @@
 #   make v / v<cat> idem sous valgrind (ft_lex et scanners generes)
 #   make ext        bonus : extensions flex (non exigees par le sujet)
 #   make compress   bonus : compression (COMPRESS_FLAG=ton_option)
+#   make memfail    securite memoire : fait echouer chaque malloc un par un (ASan)
+#                   MEMFAIL_FILES="x.l" MEMFAIL_MODES="once from" MEMFAIL_MAX=300
 #   make fuzz       fuzzing par mutation des .l (FUZZ_N=500)
 #   make fuzzdiff   fuzzing differentiel des scanners contre lex (necessite lex)
 #   make golden     regenere expected/ avec lex (necessite lex)
@@ -18,6 +20,7 @@
 FT_LEX ?= ../ft_lex
 LIBL ?= ../libl.a
 export FT_LEX LIBL CC COMPRESS_FLAG FUZZ_N FUZZ_SEED REF_LEX VERBOSE DETAIL_LINES
+export MEMFAIL_FILES MEMFAIL_MODES MEMFAIL_MAX MEMFAIL_JOBS
 
 MANDATORY := parse regex startcond matching actions robust cli libl symbols
 CATS := $(MANDATORY) ext compress
@@ -50,6 +53,9 @@ p2:
 vp2:
 	@SELECT=$(P2_LIST) VALGRIND=1 $(RUN) $(P2_CATS)
 
+memfail:
+	@$(RUN) memfail
+
 fuzz:
 	@python3 scripts/fuzz.py mutate
 
@@ -69,4 +75,4 @@ selftest: stub
 clean:
 	rm -rf .work logs
 
-.PHONY: all m v vm one p2 vp2 fuzz fuzzdiff golden stub selftest clean $(CATS) $(addprefix v,$(CATS))
+.PHONY: all m v vm one p2 vp2 memfail fuzz fuzzdiff golden stub selftest clean $(CATS) $(addprefix v,$(CATS))

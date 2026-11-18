@@ -24,7 +24,9 @@ SRCS := main.c \
 		parser/pattern.c \
 		parser/pcur.c \
 		parser/parser.c \
-		parser/cursor.c
+		parser/cursor.c \
+		hash_map/hash_table.c \
+		hash_map/hash_table_utils.c
 
 OBJS = $(addprefix $(BUILD_DIR)/, $(SRCS:.c=.o))
 DEPS = $(OBJS:.o=.d)
