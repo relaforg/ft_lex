@@ -16,6 +16,7 @@ size_t	hash(const uint64_t *key, size_t nwords)
 	{
 		hash ^= *(key + w);
 		hash *= fnv_prime;
+		hash ^= hash >> 32;
 		w++;
 	}
 	return (hash);
