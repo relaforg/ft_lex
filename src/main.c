@@ -17,6 +17,7 @@ char	*read_fd(FILE *file)
 	char	*buf;
 	size_t	read_size;
 	char	tmp[READ_SIZE];
+	char	*t;
 
 	capacity = READ_SIZE;
 	buf = calloc(1, sizeof(*buf));
@@ -28,9 +29,13 @@ char	*read_fd(FILE *file)
 		if (!read_size)
 			break ;
 		capacity += READ_SIZE;
-		buf = realloc(buf, capacity);
-		if (!buf)
+		t = realloc(buf, capacity);
+		if (!t)
+		{
+			free(buf);
 			return (NULL);
+		}
+		buf = t;
 		buf = strncat(buf, tmp, read_size);
 	}
 	return (buf);
@@ -76,8 +81,12 @@ static int	parse_patterns(t_lex_file *lf)
 		err = pattern_parse(rule->pattern, &rule->tree, &err_pos);
 		if (err != PAT_OK)
 		{
-			dprintf(2, "Error: rule %zu: invalid pattern (error %d at column %zu)\n",
-				rule->id, err, err_pos);
+			dprintf(2,
+					"Error: rule %zu: invalid pattern (error %d at column"
+					" %zu)\n ",
+					rule->id,
+					err,
+					err_pos);
 			status = -1;
 		}
 		i++;

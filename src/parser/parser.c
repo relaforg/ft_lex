@@ -170,7 +170,12 @@ t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 	}
 	rule = (t_rule){.id = lf->rules.len, .pattern = pattern, .line = line,
 		.action = action, .tree = NULL};
-	vec_push(&lf->rules, &rule);
+	if (vec_push(&lf->rules, &rule) == -1)
+	{
+		free(pattern);
+		free(action);
+		return (PARSE_ERR_ALLOC);
+	}
 	return (PARSE_OK);
 }
 
@@ -191,11 +196,18 @@ t_parse_error	parse_declaration(t_cursor *cursor, t_lex_file *lf)
 			}
 			err = get_next_cursor_line(cursor, &line);
 			if (err == -1)
+			{
+				free(line);
 				return (PARSE_ERR_ALLOC);
+			}
 			if (!line)
 				return (PARSE_ERR_UNCLOSED_BLOCK);
-			strbuf_append(&lf->decl_code, line, strlen(line));
-			strbuf_append(&lf->decl_code, "\n", 1);
+			if (strbuf_append(&lf->decl_code, line, strlen(line)) == -1
+				|| strbuf_append(&lf->decl_code, "\n", 1) == -1)
+			{
+				free(line);
+				return (PARSE_ERR_ALLOC);
+			}
 			free(line);
 		}
 	}

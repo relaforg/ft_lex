@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   hash_table_utils.c                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: relaforg <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/28 10:20:12 by relaforg          #+#    #+#             */
-/*   Updated: 2026/11/18 08:10:57 by relaforg         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "hash_table.h"
 #include <stdlib.h>
 
@@ -32,7 +20,9 @@ void	free_hashtable(t_htable *tab)
 		i++;
 	}
 	free(tab->table);
-	free(tab);
+	tab->table = NULL;
+	tab->el_nbr = 0;
+	tab->size = 0;
 }
 
 float	load_factor(t_htable *tab)
@@ -40,41 +30,41 @@ float	load_factor(t_htable *tab)
 	return ((float)tab->el_nbr / (float)tab->size);
 }
 
-void	move_table(t_htable *old, t_htable *new)
+static void	move_table(const t_htable *tab, t_hnode **new, int new_size)
 {
 	int		i;
 	t_hnode	*curr;
-	t_hnode	*aux;
-	int		index;
+	t_hnode	*next;
+	size_t	index;
 
 	i = 0;
-	while (i < old->size)
+	while (i < tab->size)
 	{
-		curr = old->table[i];
+		curr = tab->table[i];
 		while (curr != NULL)
 		{
-			index = curr->hash & (new->size - 1);
-			aux = curr->next;
-			curr->next = new->table[index];
-			new->table[index] = curr;
-			curr = aux;
+			next = curr->next;
+			index = curr->hash & (size_t)(new_size - 1);
+			curr->next = new[index];
+			new[index] = curr;
+			curr = next;
 		}
 		i++;
 	}
 }
 
-void	increase_hashtable_size(t_htable **tab)
+int	increase_hashtable_size(t_htable *tab)
 {
-	t_htable	*new;
-	t_htable	*tmp;
+	t_hnode	**new;
+	size_t	new_size;
 
-	tmp = *tab;
-	new = init_hashtable(tmp->size * 2, tmp->nwords);
+	new_size = tab->size ? tab->size * 2 : INIT_SIZE;
+	new = calloc(sizeof(t_hnode *), new_size);
 	if (new == NULL)
-		return ;
-	move_table(tmp, new);
-	new->el_nbr = tmp->el_nbr;
-	*tab = new;
-	free(tmp->table);
-	free(tmp);
+		return (-1);
+	move_table(tab, new, new_size);
+	free(tab->table);
+	tab->size = new_size;
+	tab->table = new;
+	return (0);
 }

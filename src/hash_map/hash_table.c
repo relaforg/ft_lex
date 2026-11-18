@@ -22,46 +22,34 @@ size_t	hash(const uint64_t *key, size_t nwords)
 	return (hash);
 }
 
-t_htable	*init_hashtable(int table_size, size_t nwords)
+void	init_hashtable(t_htable *tab, size_t nwords)
 {
-	t_htable	*tab;
-
-	tab = malloc(sizeof(t_htable));
-	if (tab == NULL)
-		return (NULL);
-	tab->size = table_size;
+	tab->size = 0;
 	tab->el_nbr = 0;
 	tab->nwords = nwords;
-	tab->table = calloc(sizeof(t_hnode *), table_size);
-	if (tab->table == NULL)
-	{
-		free(tab);
-		return (NULL);
-	}
-	return (tab);
+	tab->table = NULL;
 }
 
-int	insert(t_htable **tab, const uint64_t *key, size_t hash_key, int value)
+int	insert(t_htable *tab, const uint64_t *key, size_t hash_key, int value)
 {
-	t_hnode		*new;
-	t_htable	*tmp;
+	t_hnode	*new;
 
-	tmp = *tab;
+	if ((tab->size == 0 || load_factor(tab) >= UPPER_TRESHOLD)
+		&& increase_hashtable_size(tab) == -1)
+		return (-1);
 	new = malloc(sizeof(t_hnode));
 	if (new == NULL)
 		return (-1);
 	new->key = key;
 	new->value = value;
 	new->hash = hash_key;
-	new->next = tmp->table[hash_key & (tmp->size - 1)];
-	tmp->table[hash_key & (tmp->size - 1)] = new;
-	tmp->el_nbr++;
-	if (load_factor((*tab)) >= UPPER_TRESHOLD)
-		increase_hashtable_size(tab);
+	new->next = tab->table[hash_key & (tab->size - 1)];
+	tab->table[hash_key & (tab->size - 1)] = new;
+	tab->el_nbr++;
 	return (0);
 }
 
-t_hnode	*search(t_htable *tab, const uint64_t *key, size_t hashed_key)
+t_hnode	*search(const t_htable *tab, const uint64_t *key, size_t hashed_key)
 {
 	t_hnode	*curr;
 

@@ -93,21 +93,13 @@ static int	nfa_build_star_frag(t_nfa *nfa, t_frag a, t_frag *out)
 	return (0);
 }
 
-int	nfa_build(t_nfa *nfa, t_node *root, t_frag *out)
+static int	nfa_build_node(t_nfa *nfa, t_node *node, t_frag a, t_frag b,
+		t_frag *out)
 {
-	t_frag	a;
-	t_frag	b;
-
-	if (!root)
-		return (0);
-	if (nfa_build(nfa, root->left, &a) == -1)
-		return (-1);
-	if (nfa_build(nfa, root->right, &b) == -1)
-		return (-1);
-	switch (root->type)
+	switch (node->type)
 	{
 	case N_CHAR:
-		return (nfa_build_char_frag(nfa, root, out));
+		return (nfa_build_char_frag(nfa, node, out));
 	case N_CAT:
 		return (nfa_build_cat_frag(nfa, a, b, out));
 	case N_ALT:
@@ -117,5 +109,42 @@ int	nfa_build(t_nfa *nfa, t_node *root, t_frag *out)
 	case N_PLUS:
 		return (-1);
 	}
-	return (-1);
+}
+
+int	nfa_build(t_nfa *nfa, t_node *root, t_frag *out)
+{
+	t_frag	a;
+	t_frag	b;
+	t_vec	stack;
+	t_node	*node;
+
+	a = (t_frag){0};
+	if (!root)
+		return (0);
+	vec_init(&stack, sizeof(t_node *));
+	for (node = root; node != NULL; node = node->left)
+	{
+		if (vec_push(&stack, &node) == -1)
+		{
+			vec_free(&stack, NULL);
+			return (-1);
+		}
+	}
+	for (int i = stack.len - 1; i >= 0; i--)
+	{
+		node = *(t_node **)vec_get(&stack, i);
+		if (nfa_build(nfa, node->right, &b) == -1)
+		{
+			vec_free(&stack, NULL);
+			return (-1);
+		}
+		if (nfa_build_node(nfa, node, a, b, &a) == -1)
+		{
+			vec_free(&stack, NULL);
+			return (-1);
+		}
+	}
+	*out = a;
+	vec_free(&stack, NULL);
+	return (0);
 }

@@ -10,7 +10,7 @@ void	dfa_init(t_dfa *dfa, size_t nfa_len)
 {
 	vec_init(&dfa->states, sizeof(t_dfa_state));
 	dfa->nwords = bitset_nwords(nfa_len);
-	dfa->index = init_hashtable(2048, dfa->nwords);
+	init_hashtable(&dfa->index, dfa->nwords);
 }
 
 void	dfa_state_free(void *vstate)
@@ -27,7 +27,7 @@ void	dfa_free(t_dfa *dfa)
 {
 	vec_free(&dfa->states, dfa_state_free);
 	dfa->nwords = 0;
-	free_hashtable(dfa->index);
+	free_hashtable(&dfa->index);
 }
 
 static int	rule_of_set(const t_nfa *nfa, const uint64_t *set, size_t nwords)
@@ -65,7 +65,10 @@ static int	add_state(t_dfa *dfa, const t_nfa *nfa, uint64_t *set,
 	if (vec_push(&dfa->states, &state) == -1)
 		return (-1);
 	if (insert(&dfa->index, set, hash_key, dfa->states.len - 1) == -1)
+	{
+		dfa->states.len--;
 		return (-1);
+	}
 	return (dfa->states.len - 1);
 }
 
@@ -137,7 +140,7 @@ static int	find_state(const t_dfa *dfa, const uint64_t *set, size_t hash_key)
 {
 	t_hnode	*tmp;
 
-	if ((tmp = search(dfa->index, set, hash_key)) != NULL)
+	if ((tmp = search(&dfa->index, set, hash_key)) != NULL)
 		return (tmp->value);
 	return (NFA_NULL);
 }

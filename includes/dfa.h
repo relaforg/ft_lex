@@ -19,7 +19,7 @@ typedef struct
 {
 	t_vec		states;
 	size_t		nwords;
-	t_htable	*index;
+	t_htable	index;
 }	t_dfa;
 
 void	dfa_init(t_dfa *dfa, size_t nfa_len);
