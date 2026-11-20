@@ -1,4 +1,5 @@
 #include "dfa.h"
+#include "error.h"
 #include "gen.h"
 #include "lex_file.h"
 #include "nfa.h"
@@ -65,7 +66,7 @@ static char	*read_input(const char *path)
 
 /* Parse le motif de chaque regle et range l'AST dans `rule->tree`.
  * Renvoie -1 si au moins un motif est invalide, 0 sinon */
-static int	parse_patterns(t_lex_file *lf)
+static int	parse_patterns(t_lex_file *lf, char *file_name)
 {
 	size_t			i;
 	t_rule			*rule;
@@ -81,12 +82,7 @@ static int	parse_patterns(t_lex_file *lf)
 		err = pattern_parse(rule->pattern, &rule->tree, &err_pos);
 		if (err != PAT_OK)
 		{
-			dprintf(2,
-					"Error: rule %zu: invalid pattern (error %d at column"
-					" %zu)\n ",
-					rule->id,
-					err,
-					err_pos);
+			print_pattern_error(err, file_name, err_pos);
 			status = -1;
 		}
 		i++;
@@ -112,8 +108,8 @@ static int	build_dfa(const t_lex_file *lf, t_dfa *dfa)
 			dfa_free(dfa);
 	}
 	nfa_free(&nfa);
-	if (status != 0)
-		dprintf(2, "Error: cannot build automata\n");
+	// if (status != 0)
+	// 	dprintf(2, "Error: cannot build automata\n");
 	return (status);
 }
 
@@ -126,7 +122,7 @@ static int	write_output(const t_lex_file *lf, const t_dfa *dfa)
 	out = fopen("lex.yy.c", "w");
 	if (!out)
 	{
-		dprintf(2, "Error: cannot open lex.yy.c\n");
+		// dprintf(2, "Error: cannot open lex.yy.c\n");
 		return (-1);
 	}
 	status = gen_write(out, lf, dfa);
@@ -136,12 +132,12 @@ static int	write_output(const t_lex_file *lf, const t_dfa *dfa)
 }
 
 /* Patterns -> DFA -> lex.yy.c. Renvoie 0 ou -1 */
-static int	generate(t_lex_file *lf)
+static int	generate(t_lex_file *lf, char *file_name)
 {
 	t_dfa	dfa;
 	int		status;
 
-	if (parse_patterns(lf) != 0 || build_dfa(lf, &dfa) != 0)
+	if (parse_patterns(lf, file_name) != 0 || build_dfa(lf, &dfa) != 0)
 		return (-1);
 	status = write_output(lf, &dfa);
 	dfa_free(&dfa);
@@ -152,17 +148,19 @@ int	main(int argc, char **argv)
 {
 	char		*buf;
 	t_lex_file	lf;
-	int			status;
+	char		*file_name;
+	int			err;
 
-	buf = read_input(argc > 1 ? argv[1] : NULL);
+	file_name = argc > 1 ? argv[1] : NULL;
+	buf = read_input(file_name);
 	if (!buf)
 		return (1);
-	status = -1;
-	if (parse(buf, &lf) != PARSE_OK)
-		dprintf(2, "Error: parsing error\n");
-	else
-		status = generate(&lf);
+	err = -1;
+	err = parse(buf, file_name, &lf);
+	if (err)
+		return (err);
+	err = generate(&lf, file_name);
 	lex_file_free(&lf);
 	free(buf);
-	return (status != 0);
+	return (err != 0);
 }

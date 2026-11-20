@@ -12,24 +12,25 @@ typedef enum
 	ST_DEFINITIONS = 0,
 	ST_RULES,
 	ST_USER_CODE
-}				t_state;
+}						t_state;
 
 typedef struct
 {
-	t_cursor	cursor;
-	t_state		state;
-	size_t		block_line;
-	t_lex_file	*out;
-}				t_parser;
+	t_cursor			cursor;
+	t_state				state;
+	size_t				block_line;
+	t_lex_file			*out;
+	char				*file_name;
+}						t_parser;
 
-enum			e_action_state
+enum					e_action_state
 {
 	ACT_NORMAL,
 	ACT_STRING,
 	ACT_COMMENT
 };
 
-t_parse_error	extract_ere(t_cursor *cursor, char **pattern)
+static t_parse_error	extract_ere(t_cursor *cursor, char **pattern)
 {
 	char	in_quotes;
 	char	in_brackets;
@@ -75,7 +76,7 @@ t_parse_error	extract_ere(t_cursor *cursor, char **pattern)
 	return (PARSE_OK);
 }
 
-t_parse_error	extract_action(t_cursor *cursor, char **action)
+static t_parse_error	extract_action(t_cursor *cursor, char **action)
 {
 	enum e_action_state	state;
 	size_t				depth;
@@ -101,7 +102,7 @@ t_parse_error	extract_action(t_cursor *cursor, char **action)
 			else if (c == '}' && depth > 0 && --depth == 0)
 			{
 				cursor_advance(cursor);
-				break ;
+				continue ;
 			}
 			else if (c == '"' || c == '\'')
 			{
@@ -137,6 +138,8 @@ t_parse_error	extract_action(t_cursor *cursor, char **action)
 	if (depth > 0 || state == ACT_STRING || (state == ACT_COMMENT
 			&& comment_end[0] == '*'))
 		return (PARSE_ERR_UNCLOSED_BLOCK);
+	if (cursor->pos - start == 0)
+		return (PARSE_ERR_NO_ACTION);
 	*action = strndup(cursor->buf + start, cursor->pos - start);
 	if (!*action)
 		return (PARSE_ERR_ALLOC);
@@ -144,7 +147,7 @@ t_parse_error	extract_action(t_cursor *cursor, char **action)
 	return (PARSE_OK);
 }
 
-t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
+static t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 {
 	char			*pattern;
 	t_parse_error	err;
@@ -179,7 +182,7 @@ t_parse_error	parse_rule(t_cursor *cursor, t_lex_file *lf)
 	return (PARSE_OK);
 }
 
-t_parse_error	parse_declaration(t_cursor *cursor, t_lex_file *lf)
+static t_parse_error	parse_declaration(t_cursor *cursor, t_lex_file *lf)
 {
 	char	*line;
 	int		err;
@@ -216,7 +219,8 @@ t_parse_error	parse_declaration(t_cursor *cursor, t_lex_file *lf)
 	return (PARSE_OK);
 }
 
-t_parse_error	parse_dispach(t_cursor *cursor, t_state *state, t_lex_file *lf)
+static t_parse_error	parse_dispach(t_cursor *cursor, t_state *state,
+		t_lex_file *lf)
 {
 	switch (*state)
 	{
@@ -230,7 +234,27 @@ t_parse_error	parse_dispach(t_cursor *cursor, t_state *state, t_lex_file *lf)
 	return (PARSE_OK);
 }
 
-t_parse_error	parse(char *buf, t_lex_file *lf)
+static t_parse_error	print_error(t_parse_error err, t_cursor *cursor,
+		char *file_name)
+{
+	switch (err)
+	{
+	case PARSE_OK:
+		return (err);
+	case PARSE_ERR_ALLOC:
+		return (err);
+	case PARSE_ERR_UNCLOSED_BLOCK:
+	case PARSE_ERR_NO_ACTION:
+	case PARSE_ERR_NO_SEPARATOR:
+		dprintf(2, "%s:%zu: premature EOF\n",
+			file_name != NULL ? file_name : "<stdin>", cursor->line);
+		return (err);
+	case PARSE_ERR_UNSUPORTED:
+		return (err);
+	}
+}
+
+t_parse_error	parse(char *buf, char *file_name, t_lex_file *lf)
 {
 	t_cursor		cursor;
 	t_state			state;
@@ -250,11 +274,11 @@ t_parse_error	parse(char *buf, t_lex_file *lf)
 		{
 			err = parse_dispach(&cursor, &state, lf);
 			if (err != PARSE_OK)
-				return (err);
+				return (print_error(err, &cursor, file_name));
 		}
 	}
 	lf->user_code = cursor.buf + cursor.pos;
 	if (state == ST_DEFINITIONS)
-		return (PARSE_ERR_NO_SEPARATOR);
-	return (PARSE_OK);
+		return (print_error(PARSE_ERR_NO_SEPARATOR, &cursor, file_name));
+	return (print_error(PARSE_OK, &cursor, file_name));
 }

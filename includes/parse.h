@@ -12,6 +12,6 @@ typedef enum {
 	PARSE_ERR_UNSUPORTED
 }	t_parse_error;
 
-t_parse_error parse(char *buf, t_lex_file *lf);
+t_parse_error parse(char *buf, char* file_name, t_lex_file *lf);
 
 #endif

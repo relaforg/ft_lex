@@ -15,6 +15,7 @@ SRCS := main.c \
 		lex_file.c \
 		tree.c \
 		tree_print.c \
+		error.c \
 		gen.c \
 		nfa.c \
 		dfa.c \
