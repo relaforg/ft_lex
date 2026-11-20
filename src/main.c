@@ -70,7 +70,6 @@ static int	parse_patterns(t_lex_file *lf, char *file_name)
 {
 	size_t			i;
 	t_rule			*rule;
-	size_t			err_pos;
 	t_pattern_error	err;
 	int				status;
 
@@ -79,10 +78,10 @@ static int	parse_patterns(t_lex_file *lf, char *file_name)
 	while (i < lf->rules.len)
 	{
 		rule = vec_get(&lf->rules, i);
-		err = pattern_parse(rule->pattern, &rule->tree, &err_pos);
+		err = pattern_parse(rule->pattern, &rule->tree);
 		if (err != PAT_OK)
 		{
-			print_pattern_error(err, file_name, err_pos);
+			print_pattern_error(err, file_name, rule->line);
 			status = -1;
 		}
 		i++;
@@ -146,19 +145,25 @@ static int	generate(t_lex_file *lf, char *file_name)
 
 int	main(int argc, char **argv)
 {
-	char		*buf;
-	t_lex_file	lf;
-	char		*file_name;
-	int			err;
+	char			*buf;
+	t_lex_file		lf;
+	char			*file_name;
+	size_t			err_line;
+	t_parse_error	parse_err;
+	int				err;
 
 	file_name = argc > 1 ? argv[1] : NULL;
 	buf = read_input(file_name);
 	if (!buf)
 		return (1);
-	err = -1;
-	err = parse(buf, file_name, &lf);
-	if (err)
-		return (err);
+	parse_err = parse(buf, &lf, &err_line);
+	if (parse_err != PARSE_OK)
+	{
+		print_parse_error(parse_err, file_name, err_line);
+		lex_file_free(&lf);
+		free(buf);
+		return (1);
+	}
 	err = generate(&lf, file_name);
 	lex_file_free(&lf);
 	free(buf);

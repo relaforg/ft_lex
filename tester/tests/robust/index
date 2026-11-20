@@ -15,6 +15,7 @@ binary_garbage	undefined	fichier binaire aleatoire
 only_percent	undefined	fichier contenant '%'
 only_nul	undefined	fichier de NUL
 huge_pattern	undefined	pattern litteral de 50000 caracteres
+huge_ascii_pattern	undefined	pattern litteral de 50000 caracteres ASCII aleatoires (1-127, echappes)
 many_sc_decl	undefined	2000 start conditions
 long_name	undefined	nom de definition de 10000 caracteres
 unterminated_everything	undefined	tout ouvert a EOF

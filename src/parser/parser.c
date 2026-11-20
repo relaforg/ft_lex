@@ -3,7 +3,6 @@
 #include "parse.h"
 #include "strbuf.h"
 #include "vec.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -68,8 +67,10 @@ static t_parse_error	extract_ere(t_cursor *cursor, char **pattern)
 			break ;
 		cursor_advance(cursor);
 	}
-	if (in_quotes || in_brackets)
-		return (PARSE_ERR_UNCLOSED_BLOCK);
+	if (in_quotes)
+		return (PARSE_ERR_UNCLOSED_QUOTE);
+	if (in_brackets)
+		return (PARSE_ERR_UNCLOSED_BRACKET);
 	*pattern = strndup(cursor->buf + start, cursor->pos - start);
 	if (!*pattern)
 		return (PARSE_ERR_ALLOC);
@@ -137,7 +138,7 @@ static t_parse_error	extract_action(t_cursor *cursor, char **action)
 	}
 	if (depth > 0 || state == ACT_STRING || (state == ACT_COMMENT
 			&& comment_end[0] == '*'))
-		return (PARSE_ERR_UNCLOSED_BLOCK);
+		return (PARSE_ERR_UNCLOSED_ACTION);
 	if (cursor->pos - start == 0)
 		return (PARSE_ERR_NO_ACTION);
 	*action = strndup(cursor->buf + start, cursor->pos - start);
@@ -204,7 +205,7 @@ static t_parse_error	parse_declaration(t_cursor *cursor, t_lex_file *lf)
 				return (PARSE_ERR_ALLOC);
 			}
 			if (!line)
-				return (PARSE_ERR_UNCLOSED_BLOCK);
+				return (PARSE_ERR_UNCLOSED_DECL);
 			if (strbuf_append(&lf->decl_code, line, strlen(line)) == -1
 				|| strbuf_append(&lf->decl_code, "\n", 1) == -1)
 			{
@@ -234,27 +235,10 @@ static t_parse_error	parse_dispach(t_cursor *cursor, t_state *state,
 	return (PARSE_OK);
 }
 
-static t_parse_error	print_error(t_parse_error err, t_cursor *cursor,
-		char *file_name)
-{
-	switch (err)
-	{
-	case PARSE_OK:
-		return (err);
-	case PARSE_ERR_ALLOC:
-		return (err);
-	case PARSE_ERR_UNCLOSED_BLOCK:
-	case PARSE_ERR_NO_ACTION:
-	case PARSE_ERR_NO_SEPARATOR:
-		dprintf(2, "%s:%zu: premature EOF\n",
-			file_name != NULL ? file_name : "<stdin>", cursor->line);
-		return (err);
-	case PARSE_ERR_UNSUPORTED:
-		return (err);
-	}
-}
-
-t_parse_error	parse(char *buf, char *file_name, t_lex_file *lf)
+/* Remplit `lf` a partir de `buf`. En cas d'erreur, `*err_line` recoit la
+ * ligne (1-based) ou elle a ete detectee ; `lf` reste a liberer par
+ * l'appelant avec lex_file_free */
+t_parse_error	parse(char *buf, t_lex_file *lf, size_t *err_line)
 {
 	t_cursor		cursor;
 	t_state			state;
@@ -263,7 +247,9 @@ t_parse_error	parse(char *buf, char *file_name, t_lex_file *lf)
 	state = ST_DEFINITIONS;
 	init_cursor(&cursor, buf);
 	lex_file_init(lf);
-	while (state != ST_USER_CODE && get_cursor_char(&cursor))
+	err = PARSE_OK;
+	while (err == PARSE_OK && state != ST_USER_CODE
+		&& get_cursor_char(&cursor))
 	{
 		if (cursor_starts_with(&cursor, "%%"))
 		{
@@ -271,14 +257,11 @@ t_parse_error	parse(char *buf, char *file_name, t_lex_file *lf)
 			state++;
 		}
 		else
-		{
 			err = parse_dispach(&cursor, &state, lf);
-			if (err != PARSE_OK)
-				return (print_error(err, &cursor, file_name));
-		}
 	}
+	if (err == PARSE_OK && state == ST_DEFINITIONS)
+		err = PARSE_ERR_NO_SEPARATOR;
+	*err_line = cursor.line;
 	lf->user_code = cursor.buf + cursor.pos;
-	if (state == ST_DEFINITIONS)
-		return (print_error(PARSE_ERR_NO_SEPARATOR, &cursor, file_name));
-	return (print_error(PARSE_OK, &cursor, file_name));
+	return (err);
 }

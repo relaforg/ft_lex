@@ -35,9 +35,7 @@ t_node			*pcur_fail(t_pcur *p, t_pattern_error err);
 int				pcur_enter(t_pcur *p);
 void			pcur_leave(t_pcur *p);
 
-t_pattern_error	pattern_parse(const char *pattern, t_node **out,
-					size_t *err_pos);
-const char		*pattern_strerror(t_pattern_error err);
+t_pattern_error	pattern_parse(const char *pattern, t_node **out);
 t_node			*parse_alt(t_pcur *p);
 t_node			*parse_cat(t_pcur *p);
 t_node			*parse_star(t_pcur *p);

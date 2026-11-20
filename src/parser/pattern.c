@@ -1,8 +1,7 @@
 #include "pattern.h"
 #include "tree.h"
 
-t_pattern_error	pattern_parse(const char *pattern, t_node **out,
-		size_t *err_pos)
+t_pattern_error	pattern_parse(const char *pattern, t_node **out)
 {
 	t_pcur	p;
 	t_node	*tree;
@@ -11,14 +10,10 @@ t_pattern_error	pattern_parse(const char *pattern, t_node **out,
 	pcur_init(&p, pattern);
 	tree = parse_alt(&p);
 	if (!tree)
-	{
-		*err_pos = p.pos;
 		return (p.err);
-	}
 	if (pcur_peek(&p) == ')')
 	{
 		tree_free(tree);
-		*err_pos = p.pos;
 		return (PAT_ERR_UNMATCHED_PAREN);
 	}
 	*out = tree;

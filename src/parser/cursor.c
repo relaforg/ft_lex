@@ -5,7 +5,7 @@ void	init_cursor(t_cursor *cursor, char *buf)
 {
 	cursor->buf = buf;
 	cursor->pos = 0;
-	cursor->line = 0;
+	cursor->line = 1;
 }
 
 char	get_cursor_char(t_cursor *cursor)
