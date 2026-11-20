@@ -5,6 +5,7 @@
 #   make v / v<cat> idem sous valgrind (ft_lex et scanners generes)
 #   make ext        bonus : extensions flex (non exigees par le sujet)
 #   make compress   bonus : compression (COMPRESS_FLAG=ton_option)
+#   make unit       tests unitaires de ft_atoi_base (ABI comprise) ; vunit sous valgrind
 #   make memfail    securite memoire : fait echouer chaque malloc un par un (ASan)
 #                   MEMFAIL_FILES="x.l" MEMFAIL_MODES="once from" MEMFAIL_MAX=300
 #   make fuzz       fuzzing par mutation des .l (FUZZ_N=500)
@@ -56,6 +57,22 @@ vp2:
 memfail:
 	@$(RUN) memfail
 
+# Tests unitaires des fonctions assembleur (contrat d'ABI compris)
+UNIT_W := .work/unit
+ATOI_SRC ?= ../src/ft_atoi_base.s
+
+$(UNIT_W)/atoi_base: unit/atoi_base.c unit/abi_check.s $(ATOI_SRC)
+	@mkdir -p $(UNIT_W)
+	@nasm -f elf64 -g -o $(UNIT_W)/ft_atoi_base.o $(ATOI_SRC)
+	@nasm -f elf64 -g -o $(UNIT_W)/abi_check.o unit/abi_check.s
+	@$(CC) -Wall -Wextra -Werror -g -o $@ unit/atoi_base.c $(UNIT_W)/ft_atoi_base.o $(UNIT_W)/abi_check.o
+
+unit: $(UNIT_W)/atoi_base
+	@$(UNIT_W)/atoi_base
+
+vunit: $(UNIT_W)/atoi_base
+	@valgrind -q --error-exitcode=42 $(UNIT_W)/atoi_base
+
 fuzz:
 	@python3 scripts/fuzz.py mutate
 
@@ -75,4 +92,4 @@ selftest: stub
 clean:
 	rm -rf .work logs
 
-.PHONY: all m v vm one p2 vp2 memfail fuzz fuzzdiff golden stub selftest clean $(CATS) $(addprefix v,$(CATS))
+.PHONY: all m v vm one p2 vp2 unit vunit memfail fuzz fuzzdiff golden stub selftest clean $(CATS) $(addprefix v,$(CATS))

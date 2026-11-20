@@ -63,6 +63,25 @@ esc_octal_short	posix	\60 (octal 2 chiffres)
 esc_hex	posix	\x41 (hexa)
 esc_ordinary	flex	\q -> q
 esc_nul	undefined	\0 (NUL)
+esc_hex_lower	posix	\x6a\x6b : chiffres hexa minuscules
+esc_hex_mixed	posix	\x4b\x4C\x6F : casse mixte des chiffres hexa
+esc_high_hex	posix	\xff : octet > 127 en hexa (piege du char signe)
+esc_high_octal	posix	\377 : octet > 127 en octal (piege du char signe)
+esc_octal_max3	posix	\1018 : 3 chiffres octaux max, puis 8 litteral
+esc_octal_lead0	posix	\0101 : \010 puis 1 litteral
+esc_octal_1digit	posix	a\7b : octal a 1 chiffre
+esc_octal_stop	posix	x\618 : l'octal s'arrete sur 8
+esc_star	posix	x\101*y : * porte sur l'echappement entier
+esc_alt	posix	\101|\x42 : echappements dans une alternative
+esc_group	posix	(\x41\102)*x : echappements dans un groupe
+esc_hex_short	flex	\x9z : hexa a 1 chiffre
+esc_hex_max2	flex	\x41BC : 2 chiffres hexa max, puis BC litteral
+esc_octal_89	flex	\8\9 : 8 et 9 ne sont pas octaux -> litteraux
+esc_octal_256	undefined	\400 : depasse 255 (flex tronque en 0x00)
+esc_octal_777	undefined	\777 : depasse 255 (flex tronque en 0xff)
+esc_hex_empty	undefined	a\xz : \x sans chiffre (flex : NUL)
+esc_hex_end	undefined	a\x en fin de motif
+esc_hex_nul	undefined	\x00 (NUL)
 str_ops	posix	"a.b*" litteral
 str_esc	posix	"a\nb" echappement dans une chaine
 str_concat	posix	"a"b"c"
