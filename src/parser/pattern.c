@@ -1,5 +1,9 @@
+#include "cursor.h"
 #include "pattern.h"
 #include "tree.h"
+#include "utils.h"
+#include <ctype.h>
+#include <string.h>
 
 t_pattern_error	pattern_parse(const char *pattern, t_node **out)
 {
@@ -108,6 +112,57 @@ t_node	*parse_star(t_pcur *p)
 	return (node);
 }
 
+static char	escape_char(char c, t_pcur *cursor)
+{
+	int		out;
+	char	buf[4];
+	int		i;
+
+	if (c == 'n')
+		return ('\n');
+	else if (c == 't')
+		return ('\t');
+	else if (c == 'f')
+		return ('\f');
+	else if (c == 'v')
+		return ('\v');
+	else if (c == 'r')
+		return ('\r');
+	else if (c == 'x')
+	{
+		pcur_advance(cursor);
+		i = 0;
+		while (i < 2 && isxdigit((unsigned char)pcur_peek(cursor)))
+		{
+			buf[i++] = toupper((unsigned char)pcur_peek(cursor));
+			pcur_advance(cursor);
+		}
+		buf[i] = 0;
+		if (i == 0)
+		{
+			cursor->pos--;
+			return (c);
+		}
+		out = ft_atoi_base(buf, "0123456789ABCDEF");
+		cursor->pos--;
+		return (out);
+	}
+	else if (c >= '0' && c <= '7')
+	{
+		i = 0;
+		while (i < 3 && pcur_peek(cursor) >= '0' && pcur_peek(cursor) <= '7')
+		{
+			buf[i++] = pcur_peek(cursor);
+			pcur_advance(cursor);
+		}
+		buf[i] = 0;
+		out = ft_atoi_base(buf, "01234567");
+		cursor->pos--;
+		return (out);
+	}
+	return (c);
+}
+
 t_node	*parse_atom(t_pcur *p)
 {
 	unsigned char	c;
@@ -124,10 +179,7 @@ t_node	*parse_atom(t_pcur *p)
 	{
 		pcur_advance(p);
 		c = pcur_peek(p);
-		if (c == 'n')
-			c = '\n';
-		else if (c == 't')
-			c = '\t';
+		c = escape_char(c, p);
 	}
 	else if (c == '[' || c == '.' || c == '+' || c == '?' || c == '{'
 		|| c == '^' || c == '$' || c == '"')
