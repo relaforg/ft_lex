@@ -1,6 +1,7 @@
 #include "nfa.h"
 #include "tree.h"
 #include "vec.h"
+#include <string.h>
 
 void	nfa_init(t_nfa *nfa)
 {
@@ -93,6 +94,25 @@ static int	nfa_build_star_frag(t_nfa *nfa, t_frag a, t_frag *out)
 	return (0);
 }
 
+static int	nfa_build_class_frag(t_nfa *nfa, t_node *root, t_frag *out)
+{
+	int			end;
+	int			start;
+	t_nfa_state	*state;
+
+	end = nfa_add_state(nfa, NFA_EPS, NFA_NULL, NFA_NULL);
+	if (end == -1)
+		return (-1);
+	start = nfa_add_state(nfa, NFA_CLASS, end, NFA_NULL);
+	if (start == -1)
+		return (-1);
+	state = vec_get(&nfa->states, start);
+	memcpy(state->cset, root->u.set, sizeof(state->cset));
+	out->start = start;
+	out->end = end;
+	return (0);
+}
+
 static int	nfa_build_node(t_nfa *nfa, t_node *node, t_frag a, t_frag b,
 		t_frag *out)
 {
@@ -106,6 +126,8 @@ static int	nfa_build_node(t_nfa *nfa, t_node *node, t_frag a, t_frag b,
 		return (nfa_build_alt_frag(nfa, a, b, out));
 	case N_STAR:
 		return (nfa_build_star_frag(nfa, a, out));
+	case N_CLASS:
+		return (nfa_build_class_frag(nfa, node, out));
 	case N_PLUS:
 		return (-1);
 	}

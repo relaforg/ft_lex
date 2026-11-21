@@ -124,6 +124,23 @@ static int	move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
 			state = vec_get(&nfa->states, s);
 			if (state->c == NFA_EPS)
 				continue ;
+			if (state->c == NFA_CLASS)
+			{
+				for (size_t i = 0; i < 256; i++)
+				{
+					if (bitset_test(state->cset, i))
+					{
+						if (!next[i])
+						{
+							next[i] = bitset_new(nwords);
+							if (!next[i])
+								return (-1);
+						}
+						bitset_set(next[i], state->out1);
+					}
+				}
+				continue ;
+			}
 			if (!next[state->c])
 			{
 				next[state->c] = bitset_new(nwords);

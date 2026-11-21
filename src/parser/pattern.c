@@ -1,3 +1,4 @@
+#include "bitset.h"
 #include "cursor.h"
 #include "pattern.h"
 #include "tree.h"
@@ -181,9 +182,22 @@ t_node	*parse_atom(t_pcur *p)
 		c = pcur_peek(p);
 		c = escape_char(c, p);
 	}
-	else if (c == '[' || c == '.' || c == '+' || c == '?' || c == '{'
-		|| c == '^' || c == '$' || c == '"')
+	else if (c == '[' || c == '+' || c == '?' || c == '{' || c == '^'
+		|| c == '$' || c == '"')
 		return (pcur_fail(p, PAT_ERR_UNSUPPORTED));
+	else if (c == '.')
+	{
+		node = node_new(N_CLASS, NULL, NULL);
+		if (!node)
+			return (pcur_fail(p, PAT_ERR_ALLOC));
+		for (size_t i = 0; i < 256; i++)
+		{
+			if (i != '\n')
+				bitset_set(node->u.set, i);
+		}
+		pcur_advance(p);
+		return (node);
+	}
 	else if (c == '(')
 	{
 		start = p->pos;

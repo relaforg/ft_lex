@@ -1,13 +1,15 @@
 #ifndef TREE_H
 # define TREE_H
 
+#include <stdint.h>
 typedef enum
 {
 	N_CHAR,
 	N_CAT,
 	N_ALT,
 	N_STAR,
-	N_PLUS
+	N_PLUS,
+	N_CLASS
 } t_node_type;
 
 typedef struct s_node {
@@ -15,6 +17,7 @@ typedef struct s_node {
 	union
 	{
 		unsigned char	c;
+		uint64_t		set[4];
 	} u;
 	struct s_node		*left;
 	struct s_node		*right;

@@ -3,15 +3,19 @@
 
 # include "tree.h"
 # include "vec.h"
+# include <stdint.h>
 
 # define NFA_EPS 256
+# define NFA_CLASS 257
 # define NFA_NULL (-1)
+# define NFA_CSET_NWORDS 4
 
 typedef struct {
-	int	c;
-	int	out1;
-	int	out2;
-	int	accept;
+	int			c;
+	uint64_t	cset[NFA_CSET_NWORDS];
+	int			out1;
+	int			out2;
+	int			accept;
 }	t_nfa_state;
 
 typedef struct {

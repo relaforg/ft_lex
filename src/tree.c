@@ -5,7 +5,7 @@ t_node	*node_char(unsigned char c)
 {
 	t_node	*new;
 
-	new = malloc(sizeof(t_node));
+	new = calloc(1, sizeof(t_node));
 	if (!new)
 		return (NULL);
 	new->left = NULL;
@@ -19,7 +19,7 @@ t_node	*node_new(t_node_type type, t_node *left, t_node *right)
 {
 	t_node	*new;
 
-	new = malloc(sizeof(t_node));
+	new = calloc(1, sizeof(t_node));
 	if (!new)
 		return (NULL);
 	new->left = left;
@@ -29,6 +29,7 @@ t_node	*node_new(t_node_type type, t_node *left, t_node *right)
 	new->type = type;
 	return (new);
 }
+
 void	tree_free(t_node *root)
 {
 	if (!root)

@@ -55,6 +55,9 @@ static size_t	node_label(const t_node *node, uint32_t out[LABEL_MAX])
 	case N_PLUS:
 		out[0] = '+';
 		return (1);
+	case N_CLASS:
+		out[0] = 'C';
+		return (1);
 	case N_CHAR:
 		break ;
 	}
