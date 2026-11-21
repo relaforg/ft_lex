@@ -13,13 +13,13 @@ void	nfa_free(t_nfa *nfa)
 	vec_free(&nfa->states, NULL);
 }
 
-int	nfa_add_state(t_nfa *nfa, int c, int out1, int out2)
+int	nfa_add_state(t_nfa *nfa, bool eps, int out1, int out2)
 {
 	t_nfa_state	state;
 	int			n;
 
-	state = (t_nfa_state){.out1 = out1, .out2 = out2, .c = c,
-		.accept = NFA_NULL};
+	state = (t_nfa_state){.out1 = out1, .out2 = out2, .accept = NFA_NULL,
+		.eps = eps};
 	n = nfa->states.len;
 	if (vec_push(&nfa->states, &state) == -1)
 		return (-1);
@@ -43,10 +43,10 @@ static int	nfa_build_alt_frag(t_nfa *nfa, t_frag a, t_frag b, t_frag *out)
 	int			start;
 	t_nfa_state	*tmp;
 
-	end = nfa_add_state(nfa, NFA_EPS, NFA_NULL, NFA_NULL);
+	end = nfa_add_state(nfa, true, NFA_NULL, NFA_NULL);
 	if (end == -1)
 		return (-1);
-	start = nfa_add_state(nfa, NFA_EPS, a.start, b.start);
+	start = nfa_add_state(nfa, true, a.start, b.start);
 	if (start == -1)
 		return (-1);
 	tmp = vec_get(&nfa->states, a.end);
@@ -64,10 +64,10 @@ static int	nfa_build_star_frag(t_nfa *nfa, t_frag a, t_frag *out)
 	int			start;
 	t_nfa_state	*tmp;
 
-	end = nfa_add_state(nfa, NFA_EPS, NFA_NULL, NFA_NULL);
+	end = nfa_add_state(nfa, true, NFA_NULL, NFA_NULL);
 	if (end == -1)
 		return (-1);
-	start = nfa_add_state(nfa, NFA_EPS, a.start, end);
+	start = nfa_add_state(nfa, true, a.start, end);
 	if (start == -1)
 		return (-1);
 	tmp = vec_get(&nfa->states, a.end);
@@ -84,10 +84,10 @@ static int	nfa_build_class_frag(t_nfa *nfa, t_node *root, t_frag *out)
 	int			start;
 	t_nfa_state	*state;
 
-	end = nfa_add_state(nfa, NFA_EPS, NFA_NULL, NFA_NULL);
+	end = nfa_add_state(nfa, true, NFA_NULL, NFA_NULL);
 	if (end == -1)
 		return (-1);
-	start = nfa_add_state(nfa, NFA_CLASS, end, NFA_NULL);
+	start = nfa_add_state(nfa, false, end, NFA_NULL);
 	if (start == -1)
 		return (-1);
 	state = vec_get(&nfa->states, start);

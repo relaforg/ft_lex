@@ -101,7 +101,7 @@ static void	eps_closure(const t_nfa *nfa, uint64_t *set, int *stack,
 	while (top > 0)
 	{
 		state = vec_get(&nfa->states, stack[--top]);
-		if (state->c != NFA_EPS)
+		if (!state->eps)
 			continue ;
 		push_if_new(set, stack, &top, state->out1);
 		push_if_new(set, stack, &top, state->out2);
@@ -122,11 +122,13 @@ static int	move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
 			if (!bitset_test(set, s))
 				continue ;
 			state = vec_get(&nfa->states, s);
-			if (state->c == NFA_EPS)
+			if (state->eps)
 				continue ;
-			if (state->c == NFA_CLASS)
+			for (size_t wi = 0; wi < 4; wi++)
 			{
-				for (size_t i = 0; i < 256; i++)
+				if (!state->cset[wi])
+					continue ;
+				for (size_t i = wi * 64; i < (wi * 64) + 64; i++)
 				{
 					if (bitset_test(state->cset, i))
 					{
@@ -139,15 +141,7 @@ static int	move_on(const t_nfa *nfa, const uint64_t *set, size_t nwords,
 						bitset_set(next[i], state->out1);
 					}
 				}
-				continue ;
 			}
-			if (!next[state->c])
-			{
-				next[state->c] = bitset_new(nwords);
-				if (!next[state->c])
-					return (-1);
-			}
-			bitset_set(next[state->c], state->out1);
 		}
 	}
 	return (0);

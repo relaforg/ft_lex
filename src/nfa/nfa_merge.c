@@ -23,7 +23,7 @@ int	nfa_build_rules(t_nfa *nfa, const t_vec *rules, int *start)
 		if (!tmp)
 			return (-1);
 		tmp->accept = rule->id;
-		err = nfa_add_state(nfa, NFA_EPS, t.start, *start);
+		err = nfa_add_state(nfa, true, t.start, *start);
 		if (err == -1)
 			return (-1);
 		*start = err;
