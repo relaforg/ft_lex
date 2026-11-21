@@ -26,22 +26,6 @@ int	nfa_add_state(t_nfa *nfa, int c, int out1, int out2)
 	return (n);
 }
 
-static int	nfa_build_char_frag(t_nfa *nfa, t_node *root, t_frag *out)
-{
-	int	end;
-	int	start;
-
-	end = nfa_add_state(nfa, NFA_EPS, NFA_NULL, NFA_NULL);
-	if (end == -1)
-		return (-1);
-	start = nfa_add_state(nfa, root->u.c, end, NFA_NULL);
-	if (start == -1)
-		return (-1);
-	out->start = start;
-	out->end = end;
-	return (0);
-}
-
 static int	nfa_build_cat_frag(t_nfa *nfa, t_frag a, t_frag b, t_frag *out)
 {
 	t_nfa_state	*state;
@@ -107,7 +91,7 @@ static int	nfa_build_class_frag(t_nfa *nfa, t_node *root, t_frag *out)
 	if (start == -1)
 		return (-1);
 	state = vec_get(&nfa->states, start);
-	memcpy(state->cset, root->u.set, sizeof(state->cset));
+	memcpy(state->cset, root->set, sizeof(state->cset));
 	out->start = start;
 	out->end = end;
 	return (0);
@@ -118,8 +102,6 @@ static int	nfa_build_node(t_nfa *nfa, t_node *node, t_frag a, t_frag b,
 {
 	switch (node->type)
 	{
-	case N_CHAR:
-		return (nfa_build_char_frag(nfa, node, out));
 	case N_CAT:
 		return (nfa_build_cat_frag(nfa, a, b, out));
 	case N_ALT:

@@ -1,5 +1,4 @@
 #include "bitset.h"
-#include "cursor.h"
 #include "pattern.h"
 #include "tree.h"
 #include "utils.h"
@@ -193,7 +192,7 @@ t_node	*parse_atom(t_pcur *p)
 		for (size_t i = 0; i < 256; i++)
 		{
 			if (i != '\n')
-				bitset_set(node->u.set, i);
+				bitset_set(node->set, i);
 		}
 		pcur_advance(p);
 		return (node);

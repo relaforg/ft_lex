@@ -1,3 +1,4 @@
+#include "bitset.h"
 #include "tree.h"
 #include <stdlib.h>
 
@@ -10,8 +11,8 @@ t_node	*node_char(unsigned char c)
 		return (NULL);
 	new->left = NULL;
 	new->right = NULL;
-	new->type = N_CHAR;
-	new->u.c = c;
+	new->type = N_CLASS;
+	bitset_set(new->set, c);
 	return (new);
 }
 

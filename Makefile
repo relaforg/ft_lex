@@ -15,14 +15,11 @@ SRCS := main.c \
 		gen.c \
 		nfa/nfa.c \
 		nfa/nfa_merge.c \
-		nfa/nfa_print.c \
 		dfa/dfa.c \
-		dfa/dfa_print.c \
 		utils/vec.c \
 		utils/strbuf.c \
 		utils/bitset.c \
 		utils/tree.c \
-		utils/tree_print.c \
 		utils/ft_atoi_base.s \
 		parser/lex_file.c \
 		parser/pattern.c \

@@ -4,7 +4,6 @@
 #include <stdint.h>
 typedef enum
 {
-	N_CHAR,
 	N_CAT,
 	N_ALT,
 	N_STAR,
@@ -14,11 +13,7 @@ typedef enum
 
 typedef struct s_node {
 	t_node_type			type;
-	union
-	{
-		unsigned char	c;
-		uint64_t		set[4];
-	} u;
+	uint64_t			set[4];
 	struct s_node		*left;
 	struct s_node		*right;
 }	t_node;
