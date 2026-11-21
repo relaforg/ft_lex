@@ -35,3 +35,6 @@ long_token	posix	token de 100000 caracteres
 big_input	posix	entree de 1 Mo (remplissage du buffer)
 token_across_buffer	posix	tokens a cheval sur deux buffers
 rescan_loop	posix	plusieurs appels a yylex apres return
+yylex_after_eof	flex	yylex rappele apres EOF renvoie encore 0
+long_token_star	posix	token aa* de 200000 caracteres
+many_short_tokens	posix	300000 tokens d'un caractere (remplissages du buffer)

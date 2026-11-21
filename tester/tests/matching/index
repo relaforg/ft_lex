@@ -8,3 +8,11 @@ nul_input	flex	octet NUL dans l'entree
 crlf_input	posix	\r dans l'entree
 no_final_nl	posix	entree sans \n final
 many_rules	posix	300 regles
+nullable_empty	flex	a* sur une entree vide : ne boucle pas
+nullable_newlines	flex	a* sur une entree faite de \n
+nullable_first	flex	a* en 1re regle : une correspondance vide ne gagne jamais
+eps_cycle	flex	(a*)* : cycle d'epsilon-transitions
+eps_cycle_alt	flex	(a*|b*)*c : cycle d'epsilon dans une alternative
+echo_nul_high	flex	ECHO par defaut de NUL et 0xff (fwrite, pas fputs)
+yyleng_nul	flex	yyleng compte les NUL de yytext (\0 lui-meme : cf esc_nul)
+hold_char	posix	le caractere apres yytext est restaure entre deux tokens

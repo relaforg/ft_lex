@@ -161,3 +161,8 @@ x02	posix	ligne faite d'une tabulation en section 1
 x03	flex	definitions en CRLF
 x04	posix	action sur une tres longue ligne
 x01	undefined	octet NUL dans le .l
+p37	flex	(a|)b : alternative vide a droite -> erreur
+p38	flex	(|a)b : alternative vide a gauche -> erreur
+p39	flex	a||b : alternative vide au milieu -> erreur
+p40	flex	a|*b : * sans operande -> erreur
+p41	flex	()*a : groupe vide etoile -> erreur

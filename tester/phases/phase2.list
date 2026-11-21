@@ -85,3 +85,29 @@ actions/rescan_loop
 
 # --- robust : ft_lex ne doit jamais planter, il peut refuser ---
 robust/*
+
+# --- lot B : cas speciaux (correspondances vides, echappements, octets bruts...) ---
+matching/nullable_empty
+matching/nullable_newlines
+matching/nullable_first
+matching/eps_cycle
+matching/eps_cycle_alt
+matching/echo_nul_high
+matching/yyleng_nul
+matching/hold_char
+actions/yylex_after_eof
+actions/long_token_star
+actions/many_short_tokens
+parse/p37
+parse/p38
+parse/p39
+parse/p40
+parse/p41
+regex/esc_hex_star
+regex/esc_star_star
+regex/esc_paren_group
+regex/esc_pipe_alt
+regex/esc_tab_literal
+regex/esc_space_end
+regex/utf8_star
+regex/high_byte_raw

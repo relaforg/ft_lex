@@ -113,3 +113,11 @@ example_subject	posix	exemple du sujet
 c_comment	posix	commentaires C avec une seule regex
 c_string	posix	chaine C avec echappements
 float	posix	nombres flottants
+esc_hex_star	posix	\x2a* : le * decode reste litteral, l'etoile porte dessus
+esc_star_star	posix	\** : etoile sur un * echappe
+esc_paren_group	posix	(\()*x : parenthese echappee dans un groupe
+esc_pipe_alt	posix	a\|b|c : | echappe a cote d'un | operateur
+esc_tab_literal	posix	a\<TAB>b : tabulation echappee = partie du motif
+esc_space_end	posix	a\  : espace echappe en fin de motif
+utf8_star	flex	é* : l'etoile ne porte que sur le dernier octet UTF-8
+high_byte_raw	flex	octets bruts 0xff|0x80 dans le motif (char signe)

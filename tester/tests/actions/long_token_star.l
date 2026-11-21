@@ -1,0 +1,2 @@
+%%
+aa*	printf("[%d]", yyleng);
