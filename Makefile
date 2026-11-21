@@ -11,20 +11,20 @@ DEBUG_DIR := .debug
 
 VPATH := src
 SRCS := main.c \
-		vec.c \
-		strbuf.c \
-		bitset.c \
-		lex_file.c \
-		tree.c \
-		tree_print.c \
 		error.c \
 		gen.c \
-		nfa.c \
-		dfa.c \
-		dfa_print.c \
-		nfa_merge.c \
-		nfa_print.c \
-		ft_atoi_base.s \
+		nfa/nfa.c \
+		nfa/nfa_merge.c \
+		nfa/nfa_print.c \
+		dfa/dfa.c \
+		dfa/dfa_print.c \
+		utils/vec.c \
+		utils/strbuf.c \
+		utils/bitset.c \
+		utils/tree.c \
+		utils/tree_print.c \
+		utils/ft_atoi_base.s \
+		parser/lex_file.c \
 		parser/pattern.c \
 		parser/pcur.c \
 		parser/parser.c \
