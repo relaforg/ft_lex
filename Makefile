@@ -84,6 +84,11 @@ $(DEBUG_DIR)/%.o: %.skel | $(DEBUG_DIR)
 	cd $(<D) && xxd -i $(<F) > $(abspath $(@:.o=.c))
 	$(CC) $(DEBUG_CFLAGS) -c $(@:.o=.c) -o $@
 
+compile_flags.txt:
+	echo $(CFLAGS) | tr ' ' '\n' > compile_flags.txt
+
+test: all
+	$(MAKE) -C tester $(T)
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -100,6 +105,6 @@ re: fclean all
 phase2: $(NAME) $(LIBL_NAME)
 	$(MAKE) -C tester p2
 
-.PHONY: all clean fclean re debug phase2
+.PHONY: all clean fclean re debug phase2 test
 
 -include $(DEPS) $(LIBL_DEPS)
