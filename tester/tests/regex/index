@@ -121,3 +121,11 @@ esc_tab_literal	posix	a\<TAB>b : tabulation echappee = partie du motif
 esc_space_end	posix	a\  : espace echappe en fin de motif
 utf8_star	flex	é* : l'etoile ne porte que sur le dernier octet UTF-8
 high_byte_raw	flex	octets bruts 0xff|0x80 dans le motif (char signe)
+prec_star_plus	posix	a*+ : postfixes enchaines, + porte sur a*
+prec_plus_star	posix	a+* : postfixes enchaines, * porte sur a+
+prec_star_q	posix	a*? : ? apres * n'est pas litteral
+prec_q_star	posix	a?* : * apres ? n'est pas litteral
+prec_q_q	posix	a?? : 0 ou 1 a, pas de ? litteral
+prec_q_plus	posix	a?+ : + porte sur a?
+prec_plus_plus	posix	a++ : equivaut a+, pas de + litteral
+prec_group_plus_q	posix	(ab)+? : postfixes enchaines sur un groupe

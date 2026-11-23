@@ -5,6 +5,20 @@
 #include <ctype.h>
 #include <string.h>
 
+static t_node_type	postfix_type(char c)
+{
+	switch (c)
+	{
+	case '*':
+		return (N_STAR);
+	case '+':
+		return (N_PLUS);
+	case '?':
+		return (N_QUESTION_MARK);
+	}
+	return (N_STAR);
+}
+
 t_pattern_error	pattern_parse(const char *pattern, t_node **out)
 {
 	t_pcur	p;
@@ -90,39 +104,19 @@ t_node	*parse_cat(t_pcur *p)
 	return (left);
 }
 
-t_node	*parse_plus(t_pcur *p)
-{
-	t_node	*node;
-	t_node	*tmp;
-
-	node = parse_atom(p);
-	if (!node)
-		return (NULL);
-	while (pcur_peek(p) == '+')
-	{
-		tmp = node_new(N_PLUS, node, NULL);
-		if (!tmp)
-		{
-			tree_free(node);
-			return (pcur_fail(p, PAT_ERR_ALLOC));
-		}
-		node = tmp;
-		pcur_advance(p);
-	}
-	return (node);
-}
-
 t_node	*parse_star(t_pcur *p)
 {
 	t_node	*node;
 	t_node	*tmp;
+	char	c;
 
-	node = parse_plus(p);
+	node = parse_atom(p);
 	if (!node)
 		return (NULL);
-	while (pcur_peek(p) == '*')
+	c = pcur_peek(p);
+	while (c == '*' || c == '+' || c == '?')
 	{
-		tmp = node_new(N_STAR, node, NULL);
+		tmp = node_new(postfix_type(c), node, NULL);
 		if (!tmp)
 		{
 			tree_free(node);
@@ -130,6 +124,7 @@ t_node	*parse_star(t_pcur *p)
 		}
 		node = tmp;
 		pcur_advance(p);
+		c = pcur_peek(p);
 	}
 	return (node);
 }
@@ -203,8 +198,7 @@ t_node	*parse_atom(t_pcur *p)
 		c = pcur_peek(p);
 		c = escape_char(c, p);
 	}
-	else if (c == '[' || c == '?' || c == '{' || c == '^' || c == '$'
-		|| c == '"')
+	else if (c == '[' || c == '{' || c == '^' || c == '$' || c == '"')
 		return (pcur_fail(p, PAT_ERR_UNSUPPORTED));
 	else if (c == '.')
 	{

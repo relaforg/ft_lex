@@ -8,7 +8,8 @@ typedef enum
 	N_ALT,
 	N_STAR,
 	N_PLUS,
-	N_CLASS
+	N_CLASS,
+	N_QUESTION_MARK
 } t_node_type;
 
 typedef struct s_node {

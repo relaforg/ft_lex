@@ -166,3 +166,6 @@ p38	flex	(|a)b : alternative vide a gauche -> erreur
 p39	flex	a||b : alternative vide au milieu -> erreur
 p40	flex	a|*b : * sans operande -> erreur
 p41	flex	()*a : groupe vide etoile -> erreur
+p42	flex	a|+b : + sans operande -> erreur
+p43	flex	a|?b : ? sans operande -> erreur
+p44	flex	(+a)b : + en tete de groupe -> erreur
