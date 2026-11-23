@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+char	*yytext;
+int	yyleng;
+FILE	*yyin;
+FILE	*yyout;
+
+int	yywrap(void);
+
+#define ECHO fwrite(yytext,(size_t)yyleng,1,yyout)
+%% decl
+%% tables
+
+static char	*yy_buf;
+static size_t	yy_len;
+static size_t	yy_pos;
+static char	yy_hold;
+
+static int	yy_load(void)
+{
+	size_t	cap;
+	size_t	n;
+	char	*tmp;
+
+	if (!yyin)
+		yyin = stdin;
+	if (!yyout)
+		yyout = stdout;
+	cap = 4096;
+	yy_len = 0;
+	yy_buf = malloc(cap);
+	if (!yy_buf)
+	{
+		fputs("yylex: out of memory\n", stderr);
+		return (-1);
+	}
+	while ((n = fread(yy_buf + yy_len, 1, cap - yy_len - 1,		yyin)) > 0)
+	{
+		yy_len += n;
+		if (yy_len + 1 >= cap)
+		{
+			cap *= 2;
+			tmp = realloc(yy_buf, cap);
+			if (!tmp)
+			{
+				free(yy_buf);
+				yy_buf = NULL;
+				fputs("yylex: out of memory\n", stderr);
+				return (-1);
+			}
+			yy_buf = tmp;
+		}
+	}
+	yy_buf[yy_len] = '\0';
+	yy_pos = 0;
+	yy_hold = yy_buf[0];
+	return (0);
+}
+
+int	yylex(void)
+{
+	int		state;
+	int		yy_rule;
+	size_t	j;
+	size_t	end;
+
+	if (!yy_buf && yy_load() == -1)
+		return (0);
+	while (1)
+	{
+		yy_buf[yy_pos] = yy_hold;
+		if (yy_pos == yy_len)
+		{
+			free(yy_buf);
+			yy_buf = NULL;
+			if (yywrap() || yy_load() == -1)
+				return (0);
+			continue ;
+		}
+		state = 0;
+		yy_rule = 0;
+		end = yy_pos;
+		j = yy_pos;
+		while (j < yy_len)
+		{
+			state = yy_nxt[state][yy_ec[(unsigned char)yy_buf[j]]];
+			if (state == -1)
+				break ;
+			j++;
+			if (yy_accept[state])
+			{
+				yy_rule = yy_accept[state];
+				end = j;
+			}
+		}
+		if (yy_rule == 0)
+			end = yy_pos + 1;
+		yy_hold = yy_buf[end];
+		yy_buf[end] = '\0';
+		yytext = yy_buf + yy_pos;
+		yyleng = (int)(end - yy_pos);
+		yy_pos = end;
+		switch (yy_rule)
+		{
+		case 0:
+			ECHO;
+			break ;
+%% cases
+		}
+	}
+}
+
+%% user

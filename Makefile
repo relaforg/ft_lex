@@ -27,7 +27,8 @@ SRCS := main.c \
 		parser/parser.c \
 		parser/cursor.c \
 		hash_map/hash_table.c \
-		hash_map/hash_table_utils.c
+		hash_map/hash_table_utils.c \
+		skel/lex.skel
 
 OBJS = $(addprefix $(BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
 DEPS = $(OBJS:.o=.d)
@@ -54,7 +55,13 @@ $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
+	@mkdir -p $(@D)
 	$(AS) $(AS_FLAGS) -MD $(@:.o=.d) -o $@ $<
+
+$(BUILD_DIR)/%.o: %.skel | $(BUILD_DIR)
+	@mkdir -p $(@D)
+	cd $(<D) && xxd -i $(<F) > $(abspath $(@:.o=.c))
+	$(CC) $(CFLAGS) -c $(@:.o=.c) -o $@
 
 debug: $(NAME)_debug
 
@@ -69,7 +76,13 @@ $(DEBUG_DIR)/%.o: %.c | $(DEBUG_DIR)
 	$(CC) $(DEBUG_CFLAGS) -o $@ -c $<
 
 $(DEBUG_DIR)/%.o: %.s | $(DEBUG_DIR)
+	@mkdir -p $(@D)
 	$(AS) $(AS_FLAGS) -MD $(@:.o=.d) -o $@ $<
+
+$(DEBUG_DIR)/%.o: %.skel | $(DEBUG_DIR)
+	@mkdir -p $(@D)
+	cd $(<D) && xxd -i $(<F) > $(abspath $(@:.o=.c))
+	$(CC) $(DEBUG_CFLAGS) -c $(@:.o=.c) -o $@
 
 
 clean:
