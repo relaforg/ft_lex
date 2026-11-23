@@ -97,6 +97,26 @@ static int	nfa_build_class_frag(t_nfa *nfa, t_node *root, t_frag *out)
 	return (0);
 }
 
+static int	nfa_build_plus_frag(t_nfa *nfa, t_frag a, t_frag *out)
+{
+	int			end;
+	int			start;
+	t_nfa_state	*tmp;
+
+	end = nfa_add_state(nfa, true, NFA_NULL, NFA_NULL);
+	if (end == -1)
+		return (-1);
+	start = nfa_add_state(nfa, true, a.start, NFA_NULL);
+	if (start == -1)
+		return (-1);
+	tmp = vec_get(&nfa->states, a.end);
+	tmp->out1 = a.start;
+	tmp->out2 = end;
+	out->start = start;
+	out->end = end;
+	return (0);
+}
+
 static int	nfa_build_node(t_nfa *nfa, t_node *node, t_frag a, t_frag b,
 		t_frag *out)
 {
@@ -111,7 +131,7 @@ static int	nfa_build_node(t_nfa *nfa, t_node *node, t_frag a, t_frag b,
 	case N_CLASS:
 		return (nfa_build_class_frag(nfa, node, out));
 	case N_PLUS:
-		return (-1);
+		return (nfa_build_plus_frag(nfa, a, out));
 	}
 }
 

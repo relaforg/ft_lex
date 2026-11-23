@@ -90,12 +90,34 @@ t_node	*parse_cat(t_pcur *p)
 	return (left);
 }
 
-t_node	*parse_star(t_pcur *p)
+t_node	*parse_plus(t_pcur *p)
 {
 	t_node	*node;
 	t_node	*tmp;
 
 	node = parse_atom(p);
+	if (!node)
+		return (NULL);
+	while (pcur_peek(p) == '+')
+	{
+		tmp = node_new(N_PLUS, node, NULL);
+		if (!tmp)
+		{
+			tree_free(node);
+			return (pcur_fail(p, PAT_ERR_ALLOC));
+		}
+		node = tmp;
+		pcur_advance(p);
+	}
+	return (node);
+}
+
+t_node	*parse_star(t_pcur *p)
+{
+	t_node	*node;
+	t_node	*tmp;
+
+	node = parse_plus(p);
 	if (!node)
 		return (NULL);
 	while (pcur_peek(p) == '*')
@@ -181,8 +203,8 @@ t_node	*parse_atom(t_pcur *p)
 		c = pcur_peek(p);
 		c = escape_char(c, p);
 	}
-	else if (c == '[' || c == '+' || c == '?' || c == '{' || c == '^'
-		|| c == '$' || c == '"')
+	else if (c == '[' || c == '?' || c == '{' || c == '^' || c == '$'
+		|| c == '"')
 		return (pcur_fail(p, PAT_ERR_UNSUPPORTED));
 	else if (c == '.')
 	{
