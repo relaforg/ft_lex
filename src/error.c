@@ -1,16 +1,16 @@
 #include "error.h"
+#include "pattern.h"
 #include <stdio.h>
 
 /* Format commun a toutes les erreurs : "<fichier>:<ligne>: <message>" */
 static void	print_error(const char *file_name, size_t line, const char *msg)
 {
-	dprintf(2, "%s:%zu: %s\n", file_name != NULL ? file_name : "<stdin>",
-		line, msg);
+	dprintf(2, "%s:%zu: %s\n", file_name != NULL ? file_name : "<stdin>", line,
+		msg);
 }
 
 /* Pas de `default` : avec -Wall -Werror, oublier un code ne compile pas */
-void	print_parse_error(t_parse_error err, const char *file_name,
-		size_t line)
+void	print_parse_error(t_parse_error err, const char *file_name, size_t line)
 {
 	switch (err)
 	{
@@ -67,6 +67,9 @@ void	print_pattern_error(t_pattern_error err, const char *file_name,
 		break ;
 	case PAT_ERR_UNSUPPORTED:
 		print_error(file_name, line, "unsupported pattern construct");
+		break ;
+	case PAT_ERR_NEGATIVE_RANGE:
+		print_error(file_name, line, "negative range");
 		break ;
 	}
 }

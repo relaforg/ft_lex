@@ -17,6 +17,7 @@ typedef enum
 	PAT_ERR_TRAILING_BACKSLASH,
 	PAT_ERR_UNSUPPORTED,
 	PAT_ERR_TOO_DEEP,
+	PAT_ERR_NEGATIVE_RANGE
 }	t_pattern_error;
 
 typedef struct

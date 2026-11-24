@@ -1,7 +1,5 @@
 equiv_class	undefined	[[=a=]] (hors sujet, ne doit pas planter)
 collating	undefined	[[.a.]] (hors sujet, ne doit pas planter)
-bad_posix_class	undefined	[[:foo:]] classe inconnue
-unclosed_posix_class	undefined	[[:alpha:] non ferme
 posix_range_start	undefined	[[:digit:]-z] classe comme borne d intervalle
 posix_range_end	undefined	[a-[:digit:]] classe comme borne d intervalle
 posix_upper_name	undefined	[[:ALPHA:]] nom en majuscules
@@ -25,5 +23,8 @@ long_name	undefined	nom de definition de 10000 caracteres
 unterminated_everything	undefined	tout ouvert a EOF
 empty_brackets	undefined	[] vide
 neg_empty_brackets	undefined	[^] vide
+posix_empty_name	undefined	[[::]] nom vide (flex : litteraux)
+posix_space_name	undefined	[[: alpha:]] espace dans le nom (flex : litteraux)
+range_chain	undefined	[a-c-e] intervalles enchaines (flex : erreur)
 trailing_backslash	undefined	pattern finissant par \
 anchors_in_group	undefined	(^abc)|(def$) (POSIX: indefini)

@@ -215,7 +215,7 @@ void	set_punctuation(uint64_t set[])
 		bitset_set(set, i);
 	for (char i = ':'; i <= '@'; i++)
 		bitset_set(set, i);
-	for (char i = ']'; i <= '`'; i++)
+	for (char i = '['; i <= '`'; i++)
 		bitset_set(set, i);
 	for (char i = '{'; i <= '~'; i++)
 		bitset_set(set, i);
@@ -237,15 +237,14 @@ void	set_cntrl(uint64_t set[])
 
 void	set_graph(uint64_t set[])
 {
-	set_cntrl(set);
-	bitset_set(set, ' ');
-	bitset_neg(set, 4);
+	for (char i = '!'; i <= '~'; i++)
+		bitset_set(set, i);
 }
 
 void	set_print(uint64_t set[])
 {
-	set_cntrl(set);
-	bitset_neg(set, 4);
+	for (char i = ' '; i <= '~'; i++)
+		bitset_set(set, i);
 }
 
 void	set_xdigit(uint64_t set[])
@@ -258,24 +257,19 @@ void	set_xdigit(uint64_t set[])
 	}
 }
 
-void	set_ascii(uint64_t set[])
+void	set_range(uint64_t set[], unsigned char lo, unsigned char hi)
 {
-	for (char i = '\x00'; i <= '\x7F'; i++)
+	for (int i = lo; i <= hi; i++)
 		bitset_set(set, i);
-}
-
-void	set_word(uint64_t set[])
-{
-	set_alpha(set);
-	set_digit(set);
-	bitset_set(set, '_');
 }
 
 t_node	*parse_class(t_pcur *p)
 {
-	t_node	*node;
-	char	c;
-	bool	is_neg;
+	t_node			*node;
+	char			c;
+	bool			is_neg;
+	unsigned char	lo;
+	unsigned char	hi;
 
 	is_neg = false;
 	node = node_new(N_CLASS, NULL, NULL);
@@ -290,6 +284,8 @@ t_node	*parse_class(t_pcur *p)
 		{
 			is_neg = true;
 			i--;
+			pcur_advance(p);
+			continue ;
 		}
 		else if (c == '\\')
 		{
@@ -302,76 +298,96 @@ t_node	*parse_class(t_pcur *p)
 			{
 				p->pos += 9;
 				set_alpha(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:digit:]", 9))
 			{
 				p->pos += 9;
 				set_digit(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:alnum:]", 9))
 			{
 				p->pos += 9;
 				set_alpha(node->set);
 				set_digit(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:lower:]", 9))
 			{
 				p->pos += 9;
 				set_lower(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:upper:]", 9))
 			{
 				p->pos += 9;
 				set_upper(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:space:]", 9))
 			{
 				p->pos += 9;
 				set_space(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:blank:]", 9))
 			{
 				p->pos += 9;
 				bitset_set(node->set, ' ');
 				bitset_set(node->set, '\t');
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:punct:]", 9))
 			{
 				p->pos += 9;
 				set_punctuation(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:cntrl:]", 9))
 			{
 				p->pos += 9;
 				set_cntrl(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:graph:]", 9))
 			{
 				p->pos += 9;
 				set_graph(node->set);
+				continue ;
 			}
 			else if (!strncmp(p->s + p->pos, "[:print:]", 9))
 			{
 				p->pos += 9;
 				set_print(node->set);
+				continue ;
 			}
-			else if (!strncmp(p->s + p->pos, "[:xdigit:]", 9))
+			else if (!strncmp(p->s + p->pos, "[:xdigit:]", 10))
 			{
 				p->pos += 10;
 				set_xdigit(node->set);
+				continue ;
 			}
-			else if (!strncmp(p->s + p->pos, "[:ascii:]", 9))
+		}
+		if (*(p->s + p->pos + 1) == '-' && *(p->s + p->pos + 2) && *(p->s
+				+ p->pos + 2) != ']')
+		{
+			lo = c;
+			pcur_advance(p);
+			pcur_advance(p);
+			hi = pcur_peek(p);
+			if (hi == '\\')
 			{
-				p->pos += 9;
-				set_ascii(node->set);
+				pcur_advance(p);
+				hi = escape_char(pcur_peek(p), p);
 			}
-			else if (!strncmp(p->s + p->pos, "[:word:]", 9))
+			if (lo > hi && lo >= 0)
 			{
-				p->pos += 8;
-				set_word(node->set);
+				free(node);
+				return (pcur_fail(p, PAT_ERR_NEGATIVE_RANGE));
 			}
-			else
-				return (pcur_fail(p, PAT_ERR_UNCLOSED_PAREN));
+			pcur_advance(p);
+			set_range(node->set, lo, hi);
 			continue ;
 		}
 		bitset_set(node->set, c);

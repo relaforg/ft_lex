@@ -1,0 +1,471 @@
+#include "bitset.h"
+#include "pattern.h"
+#include "tree.h"
+#include "utils.h"
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+static t_node_type	postfix_type(char c)
+{
+	switch (c)
+	{
+	case '*':
+		return (N_STAR);
+	case '+':
+		return (N_PLUS);
+	case '?':
+		return (N_QUESTION_MARK);
+	}
+	return (N_STAR);
+}
+
+t_pattern_error	pattern_parse(const char *pattern, t_node **out)
+{
+	t_pcur	p;
+	t_node	*tree;
+
+	*out = NULL;
+	pcur_init(&p, pattern);
+	tree = parse_alt(&p);
+	if (!tree)
+		return (p.err);
+	if (pcur_peek(&p) == ')')
+	{
+		tree_free(tree);
+		return (PAT_ERR_UNMATCHED_PAREN);
+	}
+	*out = tree;
+	return (PAT_OK);
+}
+
+t_node	*parse_alt(t_pcur *p)
+{
+	t_node	*left;
+	t_node	*right;
+	t_node	*tmp;
+
+	if (!pcur_peek(p) || pcur_peek(p) == '|' || pcur_peek(p) == ')')
+		return (pcur_fail(p, PAT_ERR_EMPTY_ALTERNATIVE));
+	left = parse_cat(p);
+	if (!left)
+		return (NULL);
+	while (pcur_peek(p) == '|')
+	{
+		pcur_advance(p);
+		if (!pcur_peek(p) || pcur_peek(p) == '|' || pcur_peek(p) == ')')
+		{
+			tree_free(left);
+			return (pcur_fail(p, PAT_ERR_EMPTY_ALTERNATIVE));
+		}
+		right = parse_cat(p);
+		if (!right)
+		{
+			tree_free(left);
+			return (NULL);
+		}
+		tmp = node_new(N_ALT, left, right);
+		if (!tmp)
+		{
+			tree_free(left);
+			tree_free(right);
+			return (pcur_fail(p, PAT_ERR_ALLOC));
+		}
+		left = tmp;
+	}
+	return (left);
+}
+
+t_node	*parse_cat(t_pcur *p)
+{
+	t_node	*left;
+	t_node	*right;
+	t_node	*tmp;
+
+	left = parse_star(p);
+	if (!left)
+		return (NULL);
+	while (pcur_peek(p) && pcur_peek(p) != '|' && pcur_peek(p) != ')')
+	{
+		right = parse_star(p);
+		if (!right)
+		{
+			tree_free(left);
+			return (NULL);
+		}
+		tmp = node_new(N_CAT, left, right);
+		if (!tmp)
+		{
+			tree_free(left);
+			tree_free(right);
+			return (pcur_fail(p, PAT_ERR_ALLOC));
+		}
+		left = tmp;
+	}
+	return (left);
+}
+
+t_node	*parse_star(t_pcur *p)
+{
+	t_node	*node;
+	t_node	*tmp;
+	char	c;
+
+	node = parse_atom(p);
+	if (!node)
+		return (NULL);
+	c = pcur_peek(p);
+	while (c == '*' || c == '+' || c == '?')
+	{
+		tmp = node_new(postfix_type(c), node, NULL);
+		if (!tmp)
+		{
+			tree_free(node);
+			return (pcur_fail(p, PAT_ERR_ALLOC));
+		}
+		node = tmp;
+		pcur_advance(p);
+		c = pcur_peek(p);
+	}
+	return (node);
+}
+
+static char	escape_char(char c, t_pcur *cursor)
+{
+	int		out;
+	char	buf[4];
+	int		i;
+
+	if (c == 'n')
+		return ('\n');
+	else if (c == 't')
+		return ('\t');
+	else if (c == 'f')
+		return ('\f');
+	else if (c == 'v')
+		return ('\v');
+	else if (c == 'r')
+		return ('\r');
+	else if (c == 'x')
+	{
+		pcur_advance(cursor);
+		i = 0;
+		while (i < 2 && isxdigit((unsigned char)pcur_peek(cursor)))
+		{
+			buf[i++] = toupper((unsigned char)pcur_peek(cursor));
+			pcur_advance(cursor);
+		}
+		buf[i] = 0;
+		if (i == 0)
+		{
+			cursor->pos--;
+			return (c);
+		}
+		out = ft_atoi_base(buf, "0123456789ABCDEF");
+		cursor->pos--;
+		return (out);
+	}
+	else if (c >= '0' && c <= '7')
+	{
+		i = 0;
+		while (i < 3 && pcur_peek(cursor) >= '0' && pcur_peek(cursor) <= '7')
+		{
+			buf[i++] = pcur_peek(cursor);
+			pcur_advance(cursor);
+		}
+		buf[i] = 0;
+		out = ft_atoi_base(buf, "01234567");
+		cursor->pos--;
+		return (out);
+	}
+	return (c);
+}
+
+void	set_lower(uint64_t set[])
+{
+	for (char i = 'a'; i <= 'z'; i++)
+		bitset_set(set, i);
+}
+
+void	set_upper(uint64_t set[])
+{
+	for (char i = 'A'; i <= 'Z'; i++)
+		bitset_set(set, i);
+}
+
+void	set_alpha(uint64_t set[])
+{
+	for (char i = 'a'; i <= 'z'; i++)
+	{
+		bitset_set(set, i);
+		bitset_set(set, i - 32);
+	}
+}
+
+void	set_digit(uint64_t set[])
+{
+	for (char i = '0'; i <= '9'; i++)
+		bitset_set(set, i);
+}
+
+void	set_punctuation(uint64_t set[])
+{
+	for (char i = '!'; i <= '/'; i++)
+		bitset_set(set, i);
+	for (char i = ':'; i <= '@'; i++)
+		bitset_set(set, i);
+	for (char i = ']'; i <= '`'; i++)
+		bitset_set(set, i);
+	for (char i = '{'; i <= '~'; i++)
+		bitset_set(set, i);
+}
+
+void	set_space(uint64_t set[])
+{
+	for (char i = '\t'; i <= '\r'; i++)
+		bitset_set(set, i);
+	bitset_set(set, ' ');
+}
+
+void	set_cntrl(uint64_t set[])
+{
+	for (char i = '\x00'; i <= '\x1F'; i++)
+		bitset_set(set, i);
+	bitset_set(set, '\x7F');
+}
+
+void	set_graph(uint64_t set[])
+{
+	set_cntrl(set);
+	bitset_set(set, ' ');
+	bitset_neg(set, 4);
+}
+
+void	set_print(uint64_t set[])
+{
+	set_cntrl(set);
+	bitset_neg(set, 4);
+}
+
+void	set_xdigit(uint64_t set[])
+{
+	set_digit(set);
+	for (char i = 'a'; i <= 'f'; i++)
+	{
+		bitset_set(set, i);
+		bitset_set(set, i - 32);
+	}
+}
+
+void	set_ascii(uint64_t set[])
+{
+	for (char i = '\x00'; i <= '\x7F'; i++)
+		bitset_set(set, i);
+}
+
+void	set_word(uint64_t set[])
+{
+	set_alpha(set);
+	set_digit(set);
+	bitset_set(set, '_');
+}
+
+void	set_range(uint64_t set[], char lo, char hi)
+{
+	for (char i = lo; i <= hi; i++)
+		bitset_set(set, i);
+}
+
+t_node	*parse_class(t_pcur *p)
+{
+	t_node	*node;
+	char	c;
+	bool	is_neg;
+	char	lo;
+	char	hi;
+
+	is_neg = false;
+	node = node_new(N_CLASS, NULL, NULL);
+	if (!node)
+		return (pcur_fail(p, PAT_ERR_ALLOC));
+	for (size_t i = 0; pcur_peek(p); i++)
+	{
+		c = pcur_peek(p);
+		if (c == ']' && i > 0)
+			break ;
+		if (c == '^' && i == 0)
+		{
+			is_neg = true;
+			i--;
+		}
+		else if (c == '\\')
+		{
+			pcur_advance(p);
+			c = escape_char(pcur_peek(p), p);
+		}
+		else if (c == '[')
+		{
+			if (!strncmp(p->s + p->pos, "[:alpha:]", 9))
+			{
+				p->pos += 9;
+				set_alpha(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:digit:]", 9))
+			{
+				p->pos += 9;
+				set_digit(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:alnum:]", 9))
+			{
+				p->pos += 9;
+				set_alpha(node->set);
+				set_digit(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:lower:]", 9))
+			{
+				p->pos += 9;
+				set_lower(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:upper:]", 9))
+			{
+				p->pos += 9;
+				set_upper(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:space:]", 9))
+			{
+				p->pos += 9;
+				set_space(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:blank:]", 9))
+			{
+				p->pos += 9;
+				bitset_set(node->set, ' ');
+				bitset_set(node->set, '\t');
+			}
+			else if (!strncmp(p->s + p->pos, "[:punct:]", 9))
+			{
+				p->pos += 9;
+				set_punctuation(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:cntrl:]", 9))
+			{
+				p->pos += 9;
+				set_cntrl(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:graph:]", 9))
+			{
+				p->pos += 9;
+				set_graph(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:print:]", 9))
+			{
+				p->pos += 9;
+				set_print(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:xdigit:]", 9))
+			{
+				p->pos += 10;
+				set_xdigit(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:ascii:]", 9))
+			{
+				p->pos += 9;
+				set_ascii(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:word:]", 9))
+			{
+				p->pos += 8;
+				set_word(node->set);
+			}
+			else
+				return (pcur_fail(p, PAT_ERR_UNCLOSED_PAREN));
+			continue ;
+		}
+		if (*(p->s + p->pos + 1) == '-' && *(p->s + p->pos + 2) && *(p->s
+				+ p->pos + 2) != ']')
+		{
+			lo = c;
+			pcur_advance(p);
+			pcur_advance(p);
+			hi = pcur_peek(p);
+			if (lo > hi)
+				return (pcur_fail(p, PAT_ERR_NEGATIVE_RANGE));
+			set_range(set, lo, hi)
+		}
+		bitset_set(node->set, c);
+		pcur_advance(p);
+	}
+	if (!pcur_peek(p))
+	{
+		free(node);
+		return (pcur_fail(p, PAT_ERR_UNCLOSED_PAREN));
+	}
+	if (is_neg)
+		bitset_neg(node->set, 4);
+	pcur_advance(p);
+	return (node);
+}
+
+t_node	*parse_atom(t_pcur *p)
+{
+	unsigned char	c;
+	t_node			*node;
+	size_t			start;
+	t_node			*sub;
+
+	c = pcur_peek(p);
+	if (c == '\0' || c == '|' || c == ')' || c == '*')
+		return (pcur_fail(p, PAT_ERR_MISSING_OPERAND));
+	else if (c == '\\' && !p->s[p->pos + 1])
+		return (pcur_fail(p, PAT_ERR_TRAILING_BACKSLASH));
+	else if (c == '\\')
+	{
+		pcur_advance(p);
+		c = pcur_peek(p);
+		c = escape_char(c, p);
+	}
+	else if (c == '[')
+	{
+		pcur_advance(p);
+		return (parse_class(p));
+	}
+	else if (c == '{' || c == '^' || c == '$' || c == '"')
+		return (pcur_fail(p, PAT_ERR_UNSUPPORTED));
+	else if (c == '.')
+	{
+		node = node_new(N_CLASS, NULL, NULL);
+		if (!node)
+			return (pcur_fail(p, PAT_ERR_ALLOC));
+		for (size_t i = 0; i < 256; i++)
+		{
+			if (i != '\n')
+				bitset_set(node->set, i);
+		}
+		pcur_advance(p);
+		return (node);
+	}
+	else if (c == '(')
+	{
+		start = p->pos;
+		if (!pcur_enter(p))
+			return (NULL);
+		pcur_advance(p);
+		sub = parse_alt(p);
+		if (!sub)
+			return (NULL);
+		if (!pcur_match(p, ')'))
+		{
+			tree_free(sub);
+			p->pos = start;
+			return (pcur_fail(p, PAT_ERR_UNCLOSED_PAREN));
+		}
+		pcur_leave(p);
+		return (sub);
+	}
+	pcur_advance(p);
+	node = node_char(c);
+	if (!node)
+		return (pcur_fail(p, PAT_ERR_ALLOC));
+	return (node);
+}

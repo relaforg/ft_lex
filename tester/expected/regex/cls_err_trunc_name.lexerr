@@ -1,0 +1,3 @@
+cls_err_trunc_name.l:2: bad character class
+cls_err_trunc_name.l:2: unrecognized rule
+cls_err_trunc_name.l:2: fatal parse error

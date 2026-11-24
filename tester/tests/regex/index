@@ -70,6 +70,69 @@ cls_posix_outside	posix	[:alpha:] hors crochets = classe de : a l p h
 cls_posix_unterm	flex	[[:alpha] sans :] -> litteraux
 cls_word	flex	[[:word:]] inconnu de POSIX -> erreur
 cls_ascii	flex	[[:ascii:]] inconnu de POSIX -> erreur
+cls_all_alnum	posix	[[:alnum:]] sur les 256 octets
+cls_all_alpha	posix	[[:alpha:]] sur les 256 octets
+cls_all_blank	posix	[[:blank:]] sur les 256 octets
+cls_all_cntrl	posix	[[:cntrl:]] sur les 256 octets
+cls_all_digit	posix	[[:digit:]] sur les 256 octets
+cls_all_graph	posix	[[:graph:]] sur les 256 octets
+cls_all_lower	posix	[[:lower:]] sur les 256 octets
+cls_all_print	posix	[[:print:]] sur les 256 octets
+cls_all_punct	posix	[[:punct:]] sur les 256 octets
+cls_all_space	posix	[[:space:]] sur les 256 octets
+cls_all_upper	posix	[[:upper:]] sur les 256 octets
+cls_all_xdigit	posix	[[:xdigit:]] sur les 256 octets
+cls_all_neg_alnum	posix	[^[:alnum:]] sur les 256 octets
+cls_all_neg_alpha	posix	[^[:alpha:]] sur les 256 octets
+cls_all_neg_blank	posix	[^[:blank:]] sur les 256 octets
+cls_all_neg_cntrl	posix	[^[:cntrl:]] sur les 256 octets
+cls_all_neg_digit	posix	[^[:digit:]] sur les 256 octets
+cls_all_neg_graph	posix	[^[:graph:]] sur les 256 octets
+cls_all_neg_lower	posix	[^[:lower:]] sur les 256 octets
+cls_all_neg_print	posix	[^[:print:]] sur les 256 octets
+cls_all_neg_punct	posix	[^[:punct:]] sur les 256 octets
+cls_all_neg_space	posix	[^[:space:]] sur les 256 octets
+cls_all_neg_upper	posix	[^[:upper:]] sur les 256 octets
+cls_all_neg_xdigit	posix	[^[:xdigit:]] sur les 256 octets
+cls_graph_order	posix	[\x01[:graph:]] : le membre deja present reste
+cls_print_order	posix	[\x01[:print:]] : le membre deja present reste
+cls_posix_dup	posix	[[:digit:][:digit:]] : meme classe deux fois
+cls_posix_overlap	posix	[[:alpha:][:upper:]] : classes qui se recouvrent
+cls_posix_then_range	posix	[[:digit:]a-c] : intervalle apres classe POSIX
+cls_range_then_posix	posix	[a-c[:digit:]] : classe POSIX apres intervalle
+cls_rbracket_posix	posix	[][:digit:]] : ] en tete puis classe POSIX
+cls_neg_rbracket_posix	posix	[^][:digit:]] : ^] en tete puis classe POSIX
+cls_dash_posix	posix	[-[:digit:]] : tiret initial puis classe POSIX
+cls_posix_extra_rbracket	posix	[[:digit:]]] : le 2e ] est un litteral hors classe
+cls_xdigit_noclose	flex	[[:xdigit:x]] : pas de :] -> litteraux [ : x d i g t, puis ]
+cls_range_single	posix	[a-a] : intervalle d un seul octet
+cls_range_esc_hex	posix	[\x01-\x1f] : bornes echappees en hexa
+cls_range_esc_letter	posix	[\t-\r] : bornes echappees \t et \r
+cls_range_high	posix	[\x80-\xff] : octets > 127 (piege du char signe)
+cls_range_full	posix	[\x01-\xff] : borne haute 255 (la boucle doit finir)
+cls_range_nul	flex	[\x00-\x05] : NUL comme borne basse
+cls_range_space	posix	[ -~] : espace comme borne (ne coupe pas le motif)
+cls_range_dash_hi	posix	[!--] : tiret comme borne haute
+cls_range_dash_lo	posix	[--/] : tiret comme borne basse
+cls_range_rbracket_lo	posix	[]-a] : ] initial comme borne basse
+cls_range_esc_rbracket	flex	[\]-a] : ] echappe comme borne basse
+cls_range_neg	posix	[^a-z] sur les 256 octets
+cls_range_neg_dash	posix	[^-a] : tiret apres ^ = litteral
+cls_range_cross	posix	[A-z] : inclut [ \ ] ^ _ `
+cls_err_unknown	posix	[[:foo:]] classe inconnue -> erreur
+cls_err_prefix	posix	[[:alph:]] prefixe d un nom -> erreur
+cls_err_suffix	posix	[[:alphax:]] nom prolonge -> erreur
+cls_err_after_valid	posix	[[:alpha:][:foo:]] inconnue apres une valide -> erreur
+cls_err_neg_unknown	posix	[^[:foo:]] inconnue dans une negation -> erreur
+cls_err_unclosed	posix	[[:alpha:] classe externe non fermee -> erreur
+cls_err_trunc_open	posix	[[ coupe apres le 2e [ -> erreur
+cls_err_trunc_colon	posix	[[: coupe apres [: -> erreur
+cls_err_trunc_name	posix	[[:alpha coupe dans le nom -> erreur
+cls_err_trunc_end	posix	[[:alpha: coupe avant ] -> erreur
+cls_err_range_adjacent	flex	[b-a] intervalle inverse d un cran -> erreur
+cls_err_range_high	flex	[\x80-\x7f] inverse si non signe -> erreur
+cls_err_range_esc_hi	flex	[a-\]] borne haute echappee < basse -> erreur
+cls_err_range_unclosed	posix	[a-z non ferme -> erreur
 esc_n	posix	\n
 esc_t	posix	\t
 esc_misc	posix	\f \v \r
