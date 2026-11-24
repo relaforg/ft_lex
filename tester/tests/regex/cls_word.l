@@ -1,0 +1,2 @@
+%%
+[[:word:]]+	printf("<%s>", yytext);

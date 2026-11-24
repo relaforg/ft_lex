@@ -3,6 +3,8 @@
 #include "tree.h"
 #include "utils.h"
 #include <ctype.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 static t_node_type	postfix_type(char c)
@@ -180,6 +182,212 @@ static char	escape_char(char c, t_pcur *cursor)
 	return (c);
 }
 
+void	set_lower(uint64_t set[])
+{
+	for (char i = 'a'; i <= 'z'; i++)
+		bitset_set(set, i);
+}
+
+void	set_upper(uint64_t set[])
+{
+	for (char i = 'A'; i <= 'Z'; i++)
+		bitset_set(set, i);
+}
+
+void	set_alpha(uint64_t set[])
+{
+	for (char i = 'a'; i <= 'z'; i++)
+	{
+		bitset_set(set, i);
+		bitset_set(set, i - 32);
+	}
+}
+
+void	set_digit(uint64_t set[])
+{
+	for (char i = '0'; i <= '9'; i++)
+		bitset_set(set, i);
+}
+
+void	set_punctuation(uint64_t set[])
+{
+	for (char i = '!'; i <= '/'; i++)
+		bitset_set(set, i);
+	for (char i = ':'; i <= '@'; i++)
+		bitset_set(set, i);
+	for (char i = ']'; i <= '`'; i++)
+		bitset_set(set, i);
+	for (char i = '{'; i <= '~'; i++)
+		bitset_set(set, i);
+}
+
+void	set_space(uint64_t set[])
+{
+	for (char i = '\t'; i <= '\r'; i++)
+		bitset_set(set, i);
+	bitset_set(set, ' ');
+}
+
+void	set_cntrl(uint64_t set[])
+{
+	for (char i = '\x00'; i <= '\x1F'; i++)
+		bitset_set(set, i);
+	bitset_set(set, '\x7F');
+}
+
+void	set_graph(uint64_t set[])
+{
+	set_cntrl(set);
+	bitset_set(set, ' ');
+	bitset_neg(set, 4);
+}
+
+void	set_print(uint64_t set[])
+{
+	set_cntrl(set);
+	bitset_neg(set, 4);
+}
+
+void	set_xdigit(uint64_t set[])
+{
+	set_digit(set);
+	for (char i = 'a'; i <= 'f'; i++)
+	{
+		bitset_set(set, i);
+		bitset_set(set, i - 32);
+	}
+}
+
+void	set_ascii(uint64_t set[])
+{
+	for (char i = '\x00'; i <= '\x7F'; i++)
+		bitset_set(set, i);
+}
+
+void	set_word(uint64_t set[])
+{
+	set_alpha(set);
+	set_digit(set);
+	bitset_set(set, '_');
+}
+
+t_node	*parse_class(t_pcur *p)
+{
+	t_node	*node;
+	char	c;
+	bool	is_neg;
+
+	is_neg = false;
+	node = node_new(N_CLASS, NULL, NULL);
+	if (!node)
+		return (pcur_fail(p, PAT_ERR_ALLOC));
+	for (size_t i = 0; pcur_peek(p); i++)
+	{
+		c = pcur_peek(p);
+		if (c == ']' && i > 0)
+			break ;
+		if (c == '^' && i == 0)
+		{
+			is_neg = true;
+			i--;
+		}
+		else if (c == '\\')
+		{
+			pcur_advance(p);
+			c = escape_char(pcur_peek(p), p);
+		}
+		else if (c == '[')
+		{
+			if (!strncmp(p->s + p->pos, "[:alpha:]", 9))
+			{
+				p->pos += 9;
+				set_alpha(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:digit:]", 9))
+			{
+				p->pos += 9;
+				set_digit(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:alnum:]", 9))
+			{
+				p->pos += 9;
+				set_alpha(node->set);
+				set_digit(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:lower:]", 9))
+			{
+				p->pos += 9;
+				set_lower(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:upper:]", 9))
+			{
+				p->pos += 9;
+				set_upper(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:space:]", 9))
+			{
+				p->pos += 9;
+				set_space(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:blank:]", 9))
+			{
+				p->pos += 9;
+				bitset_set(node->set, ' ');
+				bitset_set(node->set, '\t');
+			}
+			else if (!strncmp(p->s + p->pos, "[:punct:]", 9))
+			{
+				p->pos += 9;
+				set_punctuation(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:cntrl:]", 9))
+			{
+				p->pos += 9;
+				set_cntrl(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:graph:]", 9))
+			{
+				p->pos += 9;
+				set_graph(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:print:]", 9))
+			{
+				p->pos += 9;
+				set_print(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:xdigit:]", 9))
+			{
+				p->pos += 10;
+				set_xdigit(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:ascii:]", 9))
+			{
+				p->pos += 9;
+				set_ascii(node->set);
+			}
+			else if (!strncmp(p->s + p->pos, "[:word:]", 9))
+			{
+				p->pos += 8;
+				set_word(node->set);
+			}
+			else
+				return (pcur_fail(p, PAT_ERR_UNCLOSED_PAREN));
+			continue ;
+		}
+		bitset_set(node->set, c);
+		pcur_advance(p);
+	}
+	if (!pcur_peek(p))
+	{
+		free(node);
+		return (pcur_fail(p, PAT_ERR_UNCLOSED_PAREN));
+	}
+	if (is_neg)
+		bitset_neg(node->set, 4);
+	pcur_advance(p);
+	return (node);
+}
+
 t_node	*parse_atom(t_pcur *p)
 {
 	unsigned char	c;
@@ -198,7 +406,12 @@ t_node	*parse_atom(t_pcur *p)
 		c = pcur_peek(p);
 		c = escape_char(c, p);
 	}
-	else if (c == '[' || c == '{' || c == '^' || c == '$' || c == '"')
+	else if (c == '[')
+	{
+		pcur_advance(p);
+		return (parse_class(p));
+	}
+	else if (c == '{' || c == '^' || c == '$' || c == '"')
 		return (pcur_fail(p, PAT_ERR_UNSUPPORTED));
 	else if (c == '.')
 	{

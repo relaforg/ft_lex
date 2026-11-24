@@ -1,0 +1,2 @@
+%%
+[[:blank:]]+	printf("<%s>", yytext);

@@ -1,0 +1,2 @@
+%%
+[[:space:]]+	printf("<%s>", yytext);

@@ -10,5 +10,6 @@ void		bitset_set(uint64_t *set, size_t i);
 int			bitset_test(const uint64_t *set, size_t i);
 int			bitset_eq(const uint64_t *a, const uint64_t *b, size_t nwords);
 int			bitset_is_empty(const uint64_t *set, size_t nwords);
+void		bitset_neg(uint64_t *set, size_t nwords);
 
 #endif

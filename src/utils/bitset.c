@@ -41,3 +41,9 @@ int	bitset_is_empty(const uint64_t *set, size_t nwords)
 	}
 	return (1);
 }
+
+void	bitset_neg(uint64_t *set, size_t nwords)
+{
+	for (size_t w = 0; w < nwords; w++)
+		set[w] = ~set[w];
+}

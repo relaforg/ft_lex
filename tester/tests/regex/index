@@ -50,6 +50,26 @@ cls_xdigit	posix	[[:xdigit:]]+
 cls_mixed	posix	[[:digit:]a-f]+
 cls_neg_posix	posix	[^[:alpha:]]+
 cls_two_posix	posix	[[:upper:][:digit:]]+
+cls_punct_all	posix	[[:punct:]] : les 4 plages, dont [ \ ] et les bornes
+cls_graph_high	posix	[[:graph:]] exclut DEL et les octets > 127
+cls_print_high	posix	[[:print:]] inclut l espace, exclut DEL et > 127
+cls_cntrl_del	posix	[[:cntrl:]] = 0-31 et DEL, pas 128
+cls_alpha_bounds	posix	[[:alpha:]] bornes @ [ ` { et UTF-8
+cls_case_bounds	posix	[[:upper:]] / [[:lower:]] aux bornes
+cls_xdigit_bounds	posix	[[:xdigit:]] bornes 0-9 A-F a-f
+cls_alnum_bounds	posix	[[:alnum:]] bornes, _ exclu
+cls_space_all	posix	[[:space:]] = \t \n \v \f \r espace, pas \b ni 0x0e
+cls_blank_bounds	posix	[[:blank:]] = espace et \t seulement
+cls_neg_posix_high	posix	[^[:alpha:]] inclut \n et les octets > 127
+cls_neg_two_posix	posix	[^[:alpha:][:digit:]]+
+cls_posix_mid	posix	[x[:digit:]z] classe POSIX au milieu
+cls_posix_esc	posix	[\t[:digit:]] echappement + classe POSIX
+cls_posix_dash	posix	[[:alpha:]-] tiret final litteral
+cls_lbracket	posix	[[a] : [ seul est litteral
+cls_posix_outside	posix	[:alpha:] hors crochets = classe de : a l p h
+cls_posix_unterm	flex	[[:alpha] sans :] -> litteraux
+cls_word	flex	[[:word:]] inconnu de POSIX -> erreur
+cls_ascii	flex	[[:ascii:]] inconnu de POSIX -> erreur
 esc_n	posix	\n
 esc_t	posix	\t
 esc_misc	posix	\f \v \r

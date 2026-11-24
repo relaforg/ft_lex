@@ -1,0 +1,2 @@
+%%
+[[:alnum:]]+	printf("<%s>", yytext);
